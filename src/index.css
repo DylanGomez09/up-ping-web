@@ -1,0 +1,176 @@
+@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+@theme inline {
+  /* Palette — resolved from the runtime [data-theme] blocks below. */
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-tint: var(--c-tint);
+  --color-border: var(--c-border);
+  --color-primary: var(--c-text-primary);
+  --color-secondary: var(--c-text-secondary);
+  --color-muted: var(--c-text-muted);
+  --color-mint: var(--c-mint);
+  --color-teal: var(--c-teal);
+  --color-teal-deep: var(--c-teal-deep);
+  --color-deep: var(--c-deep);
+  --color-danger: var(--c-danger);
+
+  /* Extensions beyond the original 12 tokens. */
+  --color-warning: var(--c-warning);
+  --color-danger-soft: var(--c-danger-soft);
+
+  /* Type */
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  /* Radii */
+  --radius-card: 16px;
+  --radius-chip: 14px;
+  --radius-control: 12px;
+  --radius-mark: 9px;
+  --radius-badge: 999px;
+
+  /* Shadows — light theme only, tinted with `deep`, never black. */
+  --shadow-card: 0 4px 14px rgba(22, 50, 77, 0.05);
+  --shadow-raised: 0 3px 10px rgba(22, 50, 77, 0.04);
+}
+
+[data-theme='light'] {
+  --c-bg: #FCFBF2;
+  --c-surface: #FFFFFF;
+  --c-tint: #F2F2DC;
+  --c-border: #E9E9D6;
+  --c-text-primary: #1C2A20;
+  --c-text-secondary: #64735F;
+  --c-text-muted: #9BA895;
+  --c-mint: #8FD6C4;
+  --c-teal: #4FA095;
+  --c-teal-deep: #33756B;
+  --c-deep: #16324D;
+  --c-danger: #C8574A;
+  --c-warning: #D99A3D;
+  --c-danger-soft: rgba(200, 87, 74, 0.1);
+}
+
+[data-theme='dark'] {
+  --c-bg: #000000;
+  --c-surface: #0C120F;
+  --c-tint: #141D18;
+  --c-border: #1E2D25;
+  --c-text-primary: #EAF2ED;
+  --c-text-secondary: #98AEA4;
+  --c-text-muted: #5D7369;
+  --c-mint: #8FD6C4;
+  --c-teal: #57B3A6;
+  --c-teal-deep: #86D9C7;
+  --c-deep: #000000;
+  --c-danger: #E2887C;
+  --c-warning: #D99A3D;
+  --c-danger-soft: rgba(226, 136, 124, 0.12);
+}
+
+/* The single brand gradient, shared by InfoChip (highlight), DiagnosticSummary
+   and the Profile avatar. */
+@utility gradient-brand {
+  background-image: linear-gradient(135deg, var(--c-mint) 0%, var(--c-teal) 100%);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--c-bg);
+    color: var(--c-text-primary);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 22px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Visible keyboard focus everywhere, only for keyboard users. */
+  :focus-visible {
+    outline: 2px solid var(--c-teal);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbar gutter stability on the dark, near-black theme. */
+  ::selection {
+    background-color: var(--c-tint);
+    color: var(--c-text-primary);
+  }
+}
+
+/* Range inputs are fully restyled by the Slider primitive: the track fill is a
+   per-instance gradient on the element itself, so these rules only supply the
+   neutral chrome and the thumb. */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--c-border);
+  border: 0;
+  padding: 0;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-teal);
+  box-shadow: 0 2px 6px rgba(22, 50, 77, 0.18);
+  cursor: pointer;
+}
+
+input[type='range']::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-teal);
+  box-shadow: 0 2px 6px rgba(22, 50, 77, 0.18);
+  cursor: pointer;
+}
+
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--c-teal);
+  outline-offset: 2px;
+}
+
+input[type='range']:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--c-teal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
