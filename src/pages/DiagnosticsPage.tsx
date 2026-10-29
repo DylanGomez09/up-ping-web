@@ -1,66 +1,59 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { AppText } from '@/components/AppText';
 import { InfoChip } from '@/components/InfoChip';
 import { PageHeader } from '@/components/shell/Sidebar';
-import { DiagnosticSummary } from '@/components/diagnostics/DiagnosticSummary';
-import { ArpScanCard } from '@/components/diagnostics/ArpScanCard';
-import { TracerouteCard } from '@/components/diagnostics/TracerouteCard';
-import { PortScanCard } from '@/components/diagnostics/PortScanCard';
 import { BandwidthCard } from '@/components/diagnostics/BandwidthCard';
 import { PdfExportCard } from '@/components/diagnostics/PdfExportCard';
-import {
-  getArpScan,
-  getBandwidthCorrelation,
-  getLossSlices,
-  getTracerouteLatest,
-  runPortScan,
-} from '@/lib/api/diagnostics';
+import { UnavailableToolsCard } from '@/components/diagnostics/UnavailableToolsCard';
+import { measureBandwidth } from '@/lib/api/bandwidth';
+import { getTests } from '@/lib/api/tests';
+import { buildLossSlices } from '@/lib/utils/aggregate';
 import { useGeneratePdf } from '@/hooks/useGeneratePdf';
 import { isDemoSession } from '@/lib/demo';
 
-const SUMMARY_TARGET = '8.8.8.8';
-const SUMMARY_HOST = '192.168.1.31';
-
 export function DiagnosticsPage() {
-  const queryClient = useQueryClient();
   const pdf = useGeneratePdf();
 
-  const arp = useQuery({ queryKey: ['diagnostics', 'arp'], queryFn: getArpScan });
-  const traceroute = useQuery({
-    queryKey: ['diagnostics', 'traceroute', SUMMARY_TARGET],
-    queryFn: () => getTracerouteLatest(SUMMARY_TARGET),
+  const testsQuery = useQuery({
+    queryKey: ['tests', 'diagnostics'],
+    queryFn: () => getTests(null, 100),
   });
-  const portScan = useQuery({
-    queryKey: ['diagnostics', 'portscan', SUMMARY_HOST],
-    queryFn: () => runPortScan(SUMMARY_HOST),
-  });
-  const bandwidth = useQuery({
-    queryKey: ['diagnostics', 'bandwidth'],
-    queryFn: getBandwidthCorrelation,
-  });
-  const loss = useQuery({
-    queryKey: ['diagnostics', 'loss-slices'],
-    queryFn: getLossSlices,
+
+  const lossSlices = useMemo(
+    () => buildLossSlices(testsQuery.data?.items ?? []),
+    [testsQuery.data]
+  );
+
+  const bandwidth = useMutation({
+    mutationFn: measureBandwidth,
   });
 
   const handleExport = () => {
     void pdf.generate({
-      arp: arp.data ?? null,
-      traceroute: traceroute.data ?? null,
-      portScan: portScan.data ?? null,
+      arp: null,
+      traceroute: null,
+      portScan: null,
       bandwidth: bandwidth.data ?? null,
-      loss: loss.data ?? [],
+      loss: lossSlices,
     });
   };
+
+  const bandwidthError =
+    bandwidth.isError && bandwidth.error instanceof Error
+      ? bandwidth.error.message
+      : bandwidth.isError
+        ? 'Could not measure bandwidth.'
+        : null;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Diagnostics"
-        subtitle="Five checks that isolate where a network problem lives."
+        subtitle="Real network measurements available from this browser."
         action={
           <InfoChip variant={isDemoSession() ? 'highlight' : 'neutral'}>
-            {isDemoSession() ? 'Demo data' : 'Live scan'}
+            {isDemoSession() ? 'Demo data' : 'Live tools'}
           </InfoChip>
         }
       />
@@ -73,19 +66,21 @@ export function DiagnosticsPage() {
         </div>
       )}
 
-      <DiagnosticSummary />
-
-      <ArpScanCard
-        onRescan={() => void queryClient.invalidateQueries({ queryKey: ['diagnostics'] })}
+      <BandwidthCard
+        data={bandwidth.data ?? null}
+        running={bandwidth.isPending}
+        error={bandwidthError}
+        onRun={() => bandwidth.mutate()}
       />
 
-      <TracerouteCard />
+      <UnavailableToolsCard />
 
-      <PortScanCard />
-
-      <BandwidthCard />
-
-      <PdfExportCard onExport={handleExport} exporting={pdf.exporting} />
+      <PdfExportCard
+        onExport={handleExport}
+        exporting={pdf.exporting}
+        loss={lossSlices}
+        bandwidth={bandwidth.data ?? null}
+      />
     </div>
   );
 }

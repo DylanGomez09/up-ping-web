@@ -6,4 +6,6 @@ export interface User {
   name: string;
   license_tier: LicenseTier;
   created_at: string;
+  /** Present on `GET /me`; absent on `POST /auth/register`. */
+  total_tests?: number;
 }

@@ -6,7 +6,7 @@ import { Field } from '@/components/Field';
 import { Icon } from '@/components/Icon';
 import { AppText } from '@/components/AppText';
 import { AuthShell } from '@/components/shell/AuthShell';
-import { meRequest, registerRequest } from '@/lib/api/auth';
+import { loginRequest, meRequest, registerRequest } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 import { useAuthStore } from '@/store/authStore';
 
@@ -78,10 +78,15 @@ export function RegisterPage() {
     setLoading(true);
     setErrors({});
     try {
-      const tokens = await registerRequest({
+      // Registration returns the profile, not tokens; sign in right after.
+      await registerRequest({
         email: email.trim(),
         password,
-        name: name.trim(),
+        display_name: name.trim(),
+      });
+      const tokens = await loginRequest({
+        email: email.trim(),
+        password,
       });
       setTokens(tokens.access_token, tokens.refresh_token);
       try {

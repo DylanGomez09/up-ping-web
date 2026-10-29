@@ -23,7 +23,7 @@ export function HistoryPage() {
 
   const testsQuery = useQuery({
     queryKey: ['tests'],
-    queryFn: () => getTests(null),
+    queryFn: () => getTests(null, 100),
   });
 
   const deleteMutation = useMutation({
@@ -57,7 +57,7 @@ export function HistoryPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="History"
-        subtitle="Every saved ping run on this device."
+        subtitle="Every saved ping run on your UpPing account."
         action={
           <Button
             variant="secondary"
@@ -89,7 +89,11 @@ export function HistoryPage() {
 
       <Card
         title="Saved tests"
-        subtitle={testsQuery.data ? `${items.length} on this page` : undefined}
+        subtitle={
+          testsQuery.data
+            ? `${testsQuery.data.total ?? items.length} saved · showing ${items.length}`
+            : undefined
+        }
         flush
       >
         {testsQuery.isError ? (
@@ -127,7 +131,7 @@ export function HistoryPage() {
       </Card>
 
       <div className="flex justify-center">
-        <InfoChip>Stored locally until the backend is connected</InfoChip>
+        <InfoChip>Synced with your UpPing account</InfoChip>
       </div>
     </div>
   );

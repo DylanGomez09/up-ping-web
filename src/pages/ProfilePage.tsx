@@ -4,6 +4,7 @@ import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
 import { InfoChip } from '@/components/InfoChip';
 import { PageHeader } from '@/components/shell/Sidebar';
+import { useSignOut } from '@/hooks/useSignOut';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/hooks/useTheme';
 import { APP_VERSION } from '@/lib/config';
@@ -12,7 +13,7 @@ import { formatLongDate, licenseLabel } from '@/lib/utils/format';
 
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const { signOut, signingOut } = useSignOut();
   const { theme, setTheme } = useTheme();
 
   const initials = (user?.name ?? 'U')
@@ -90,7 +91,7 @@ export function ProfilePage() {
         </div>
       )}
 
-      <Button variant="danger" onClick={logout}>
+      <Button variant="danger" onClick={() => void signOut()} loading={signingOut}>
         <Icon name="logout" size={16} />
         Sign out
       </Button>

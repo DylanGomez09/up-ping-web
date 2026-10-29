@@ -1,4 +1,5 @@
 import { IS_DEMO_ENABLED } from '@/lib/config';
+import { useAuthStore } from '@/store/authStore';
 
 const DEMO_EMAIL = 'demo@uppping.dev';
 const DEMO_PASSWORD = 'demo1234';
@@ -18,18 +19,7 @@ export function isDemoSession(): boolean {
   if (!IS_DEMO_ENABLED) {
     return false;
   }
-  try {
-    const raw = localStorage.getItem('uppping.auth');
-    if (!raw) {
-      return false;
-    }
-    const parsed = JSON.parse(raw) as {
-      state?: { user?: { email?: string } | null };
-    };
-    return parsed?.state?.user?.email === DEMO_EMAIL;
-  } catch {
-    return false;
-  }
+  return useAuthStore.getState().user?.email === DEMO_EMAIL;
 }
 
 export { DEMO_EMAIL, DEMO_PASSWORD };

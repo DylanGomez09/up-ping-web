@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/store/authStore';
 import { isDemoSession } from '@/lib/demo';
 import { API_URL } from '@/lib/config';
-import type { RefreshResponse } from '@/types/auth';
+import type { TokenResponse } from '@/types/auth';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -68,8 +68,12 @@ async function refreshAccessToken(): Promise<string> {
       throw new ApiError('Session expired', res.status);
     }
 
-    const data = (await res.json()) as RefreshResponse;
-    useAuthStore.getState().setAccessToken(data.access_token);
+    const data = (await res.json()) as TokenResponse;
+    // The backend rotates the refresh token on every refresh: persist both or
+    // the next renewal will be rejected as already-used.
+    useAuthStore
+      .getState()
+      .setTokens(data.access_token, data.refresh_token ?? refreshToken);
     return data.access_token;
   })().finally(() => {
     refreshInFlight = null;

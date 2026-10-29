@@ -13,6 +13,7 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   setAccessToken: (accessToken: string) => void;
   setUser: (user: User | null) => void;
+  markHydrated: () => void;
   logout: () => void;
 }
 
@@ -27,6 +28,7 @@ export const useAuthStore = create<AuthState>()(
         set({ accessToken, refreshToken }),
       setAccessToken: (accessToken) => set({ accessToken }),
       setUser: (user) => set({ user }),
+      markHydrated: () => set({ _hydrated: true }),
       logout: () =>
         set({ accessToken: null, refreshToken: null, user: null }),
     }),
@@ -38,8 +40,11 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         user: state.user,
       }),
-      onRehydrateStorage: () => () => {
-        useAuthStore.setState({ _hydrated: true });
+      onRehydrateStorage: () => (state) => {
+        // Called synchronously during store creation, so the hook itself is
+        // still in its temporal dead zone here. Go through the hydrated state
+        // (which carries the bound action) instead of the outer constant.
+        state?.markHydrated();
       },
     }
   )

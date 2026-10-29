@@ -8,7 +8,7 @@ import { AppText } from '@/components/AppText';
 import { AuthShell } from '@/components/shell/AuthShell';
 import { loginRequest, meRequest } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
-import { DEMO_EMAIL, DEMO_PASSWORD, isDemoEnabled } from '@/lib/demo';
+import { demoUser, isDemoEnabled } from '@/lib/demo';
 import { useAuthStore } from '@/store/authStore';
 
 interface FieldErrors {
@@ -79,23 +79,12 @@ export function LoginPage() {
     }
   };
 
-  const handleDemo = async () => {
+  const handleDemo = () => {
     setDemoLoading(true);
     setErrors({});
-    try {
-      const tokens = await loginRequest({
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD,
-      });
-      await establishSession(tokens.access_token, tokens.refresh_token);
-    } catch (err) {
-      setErrors({
-        form:
-          err instanceof ApiError ? err.message : 'Demo mode is unavailable.',
-      });
-    } finally {
-      setDemoLoading(false);
-    }
+    setTokens('uppping.demo.access', 'uppping.demo.refresh');
+    setUser(demoUser());
+    navigate('/dashboard', { replace: true });
   };
 
   return (

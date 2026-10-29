@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { AppText } from '@/components/AppText';
+import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
 import { InfoChip } from '@/components/InfoChip';
 import { Skeleton } from '@/components/Skeleton';
 import { Status } from '@/components/diagnostics/tableParts';
-import { getBandwidthCorrelation } from '@/lib/api/diagnostics';
+import type { LatencyBandwidthCorrelation } from '@/types/diagnostics';
 
 const VERDICT_TONE = {
   ok: 'ok',
@@ -18,65 +19,75 @@ const VERDICT_LABEL = {
   critical: 'Congested',
 } as const;
 
-/**
- * Cross-checks average latency against measured bandwidth. Reading both at
- * once tells you whether high latency is a bandwidth problem or a routing one.
- */
-export function BandwidthCard() {
-  const query = useQuery({
-    queryKey: ['diagnostics', 'bandwidth'],
-    queryFn: getBandwidthCorrelation,
-    refetchInterval: 30_000,
-  });
+export interface BandwidthCardProps {
+  data: LatencyBandwidthCorrelation | null;
+  running: boolean;
+  error: string | null;
+  onRun: () => void;
+}
 
+/**
+ * Real download/upload measurement against Cloudflare's speed endpoints.
+ * Manual on purpose: it moves about 12 MB, so it never runs on page load.
+ */
+export function BandwidthCard({ data, running, error, onRun }: BandwidthCardProps) {
   return (
     <Card
       title="Bandwidth vs latency"
-      subtitle="Are high pings caused by a saturated link?"
+      subtitle="Measured from this browser through speed.cloudflare.com"
       action={
-        <button
-          type="button"
-          onClick={() => void query.refetch()}
-          className="text-[13px] font-semibold text-teal transition-opacity hover:opacity-80"
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onRun}
+          loading={running}
+          disabled={running}
         >
-          Refresh
-        </button>
+          {data ? 'Run again' : 'Run speed test'}
+        </Button>
       }
     >
-      {query.isError ? (
-        <ErrorState
-          message="Could not measure bandwidth."
-          onRetry={() => void query.refetch()}
-        />
-      ) : query.data ? (
+      {error ? (
+        <ErrorState message={error} onRetry={onRun} retryLabel="Run again" />
+      ) : running ? (
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-full" />
+          <AppText variant="caption" className="block text-muted">
+            Downloading about 10 MB and uploading about 2 MB. This takes a few
+            seconds.
+          </AppText>
+        </div>
+      ) : data ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <InfoChip variant="highlight">
-              {query.data.avg_latency_ms} ms avg
+              {data.avg_latency_ms} ms avg
             </InfoChip>
-            <InfoChip>
-              ↓ {query.data.bandwidth.downlink_mbps ?? '—'} Mbps
-            </InfoChip>
-            <InfoChip>
-              ↑ {query.data.bandwidth.uplink_mbps ?? '—'} Mbps
-            </InfoChip>
-            <InfoChip>{query.data.bandwidth.activity}</InfoChip>
+            <InfoChip>↓ {data.bandwidth.downlink_mbps ?? '—'} Mbps</InfoChip>
+            <InfoChip>↑ {data.bandwidth.uplink_mbps ?? '—'} Mbps</InfoChip>
           </div>
 
           <div className="flex items-center gap-3">
-            <Status tone={VERDICT_TONE[query.data.verdict]}>
-              {VERDICT_LABEL[query.data.verdict]}
+            <Status tone={VERDICT_TONE[data.verdict]}>
+              {VERDICT_LABEL[data.verdict]}
             </Status>
           </div>
 
           <p className="text-[13px] leading-[18px] text-secondary">
-            {query.data.message}
+            {data.message}
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-full" />
+        <div className="flex flex-col gap-3">
+          <AppText variant="body" className="text-secondary">
+            Measures real download and upload throughput from this browser, then
+            compares it with latency.
+          </AppText>
+          <AppText variant="caption" className="block text-muted">
+            Downloads about 10 MB and uploads about 2 MB using Cloudflare&apos;s
+            public speed endpoints. Nothing is sent to the UpPing backend.
+          </AppText>
         </div>
       )}
     </Card>

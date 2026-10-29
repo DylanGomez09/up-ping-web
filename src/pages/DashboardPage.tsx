@@ -1,6 +1,7 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
@@ -14,46 +15,75 @@ import { StatCard } from '@/components/StatCard';
 import { LatencySparkline } from '@/components/charts/LatencySparkline';
 import { LossDonut, LossLegend } from '@/components/charts/LossDonut';
 import { PingChart } from '@/components/charts/PingChart';
-import { getLatency24h, getLossSlices } from '@/lib/api/diagnostics';
-import { saveTest } from '@/lib/api/tests';
+import { getTests, saveTest } from '@/lib/api/tests';
+import { buildLatency24h, buildLossSlices } from '@/lib/utils/aggregate';
 import { usePingTest } from '@/hooks/usePingTest';
 import { useAuthStore } from '@/store/authStore';
 import { isDemoSession } from '@/lib/demo';
+import type { LossSlice } from '@/types/diagnostics';
 
 const DEFAULT_TARGET = '8.8.8.8';
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
   const [target, setTarget] = useState(DEFAULT_TARGET);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const test = usePingTest();
 
   const saveMutation = useMutation({
     mutationFn: saveTest,
   });
 
-  const latency24h = useLatencyTrend();
+  const testsQuery = useQuery({
+    queryKey: ['tests', 'recent'],
+    queryFn: () => getTests(null, 100),
+  });
+
+  const savedTests = testsQuery.data?.items ?? [];
+  const latencyPoints = useMemo(
+    () => buildLatency24h(savedTests),
+    [savedTests]
+  );
+  const lossSlices = useMemo(() => buildLossSlices(savedTests), [savedTests]);
 
   const handleSave = async () => {
     const result = test.toTestResult();
     if (!result) {
+      setSaveError('Run at least one probe before saving the result.');
       return;
     }
-    await saveMutation.mutateAsync(result);
-    test.reset();
+
+    setSaveError(null);
+    try {
+      await saveMutation.mutateAsync(result);
+      await queryClient.invalidateQueries({ queryKey: ['tests'] });
+      test.reset();
+    } catch (err) {
+      setSaveError(
+        err instanceof Error
+          ? err.message
+          : 'Could not save the result. Please try again.'
+      );
+    }
   };
 
   const running = test.status === 'running';
+
+  const statusLabel = isDemoSession()
+    ? 'Demo session'
+    : running
+      ? 'Live probe'
+      : test.samples.length > 0
+        ? `${test.samples.length} probes`
+        : 'Ready';
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title={user ? `Hello, ${user.name}` : 'Dashboard'}
-        subtitle="Measure latency and packet loss across your workshop network."
-        action={
-          <InfoChip variant="highlight">
-            {isDemoSession() ? 'Demo session' : `${test.samples.length} probes`}
-          </InfoChip>
-        }
+        subtitle="Measure latency and packet loss from this browser."
+        action={<InfoChip variant={running ? 'highlight' : 'neutral'}>{statusLabel}</InfoChip>}
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -108,7 +138,8 @@ export function DashboardPage() {
             containerClassName="flex-1"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            placeholder="8.8.8.8"
+            placeholder="8.8.8.8 or dns.google"
+            hint="Public hosts use https://; LAN hosts use http://."
             autoComplete="off"
             spellCheck={false}
             disabled={running}
@@ -122,7 +153,12 @@ export function DashboardPage() {
                 Stop
               </Button>
             ) : (
-              <Button onClick={() => test.start(target)}>
+              <Button
+                onClick={() => {
+                  setSaveError(null);
+                  test.start(target);
+                }}
+              >
                 <Icon name="play" size={16} />
                 Start test
               </Button>
@@ -130,7 +166,7 @@ export function DashboardPage() {
 
             <Button
               variant="secondary"
-              onClick={handleSave}
+              onClick={() => void handleSave()}
               disabled={test.status !== 'finished' || saveMutation.isPending}
               loading={saveMutation.isPending}
             >
@@ -139,8 +175,16 @@ export function DashboardPage() {
           </div>
         </div>
 
+        {saveError && (
+          <div role="alert" className="mt-4 rounded-control bg-danger-soft px-4 py-3">
+            <AppText variant="caption" className="block text-danger">
+              {saveError}
+            </AppText>
+          </div>
+        )}
+
         <div className="mt-5">
-          {test.samples.length > 0 ? (
+          {test.samples.length > 0 || test.status === 'running' ? (
             <PingChart
               samples={test.samples}
               averageMs={test.avgLatencyMs || undefined}
@@ -153,23 +197,39 @@ export function DashboardPage() {
             />
           )}
         </div>
+
+        <AppText variant="caption" className="mt-4 block text-muted">
+          Browser probes time a real HTTP request (DNS + TCP + TLS + response).
+          Browsers cannot send ICMP, so values run slightly higher than `ping`.
+        </AppText>
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card title="Loss breakdown" subtitle="Delivered vs lost packets">
-          <LossPanel />
+        <Card title="Loss breakdown" subtitle="Delivered vs lost across saved tests">
+          <LossPanel
+            slices={lossSlices}
+            loading={testsQuery.isLoading}
+            error={testsQuery.isError}
+            onRetry={() => void testsQuery.refetch()}
+          />
         </Card>
 
-        <Card title="Last 24 hours" subtitle="Latency trend across the day">
-          {latency24h.isError ? (
+        <Card title="Last 24 hours" subtitle="Average latency per hour from saved tests">
+          {testsQuery.isError ? (
             <ErrorState
-              message="Could not load the latency trend."
-              onRetry={() => void latency24h.refetch()}
+              message="Could not load your saved tests."
+              onRetry={() => void testsQuery.refetch()}
             />
-          ) : latency24h.isLoading ? (
+          ) : testsQuery.isLoading ? (
             <Skeleton className="h-14 w-full" />
+          ) : latencyPoints.length < 2 ? (
+            <EmptyState
+              mark={<Icon name="activity" size={26} />}
+              title="Not enough history yet"
+              description="Save at least two tests in the last 24 hours to draw the latency trend."
+            />
           ) : (
-            <LatencySparkline points={latency24h.data ?? []} />
+            <LatencySparkline points={latencyPoints} />
           )}
         </Card>
       </div>
@@ -186,19 +246,24 @@ export function DashboardPage() {
   );
 }
 
-function LossPanel() {
-  const query = useLossSlices();
-
-  if (query.isError) {
+function LossPanel({
+  slices,
+  loading,
+  error,
+  onRetry,
+}: {
+  slices: LossSlice[];
+  loading: boolean;
+  error: boolean;
+  onRetry: () => void;
+}) {
+  if (error) {
     return (
-      <ErrorState
-        message="Could not load the loss breakdown."
-        onRetry={() => void query.refetch()}
-      />
+      <ErrorState message="Could not load the loss breakdown." onRetry={onRetry} />
     );
   }
 
-  if (query.isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center gap-5">
         <Skeleton className="size-[120px] rounded-full" />
@@ -210,14 +275,24 @@ function LossPanel() {
     );
   }
 
-  const slices = query.data ?? [];
+  if (slices.length === 0) {
+    return (
+      <EmptyState
+        mark={<Icon name="wifi" size={26} />}
+        title="No saved packets yet"
+        description="Run a ping test and save it to see delivered vs lost packets here."
+      />
+    );
+  }
+
+  const lost = slices.find((slice) => slice.label === 'Lost')?.value ?? 0;
 
   return (
     <div className="flex items-center gap-5">
       <LossDonut
         slices={slices}
         centerLabel="Loss"
-        centerValue={`${(slices[1]?.value ?? 0).toFixed(1)}%`}
+        centerValue={`${lost.toFixed(1)}%`}
       />
       <div className="min-w-0 flex-1">
         <LossLegend
@@ -230,12 +305,4 @@ function LossPanel() {
       </div>
     </div>
   );
-}
-
-function useLatencyTrend() {
-  return useQuery({ queryKey: ['diagnostics', 'latency-24h'], queryFn: getLatency24h });
-}
-
-function useLossSlices() {
-  return useQuery({ queryKey: ['diagnostics', 'loss-slices'], queryFn: getLossSlices });
 }

@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/shell/Sidebar';
 import { Slider } from '@/components/Slider';
 import { Toggle } from '@/components/Toggle';
 import { useTheme } from '@/hooks/useTheme';
+import { useSignOut } from '@/hooks/useSignOut';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { APP_VERSION } from '@/lib/config';
@@ -16,7 +17,7 @@ import { isDemoSession } from '@/lib/demo';
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const { signOut, signingOut } = useSignOut();
 
   const intervalS = useSettingsStore((s) => s.intervalS);
   const timeoutS = useSettingsStore((s) => s.timeoutS);
@@ -33,7 +34,7 @@ export function SettingsPage() {
       setConfirmLogout(true);
       return;
     }
-    logout();
+    void signOut();
   };
 
   const handleCopyEmail = async () => {
@@ -115,7 +116,7 @@ export function SettingsPage() {
 
           {confirmLogout ? (
             <div className="flex items-center gap-2">
-              <Button variant="danger" onClick={handleLogout}>
+              <Button variant="danger" onClick={handleLogout} loading={signingOut}>
                 Confirm sign out
               </Button>
               <Button variant="secondary" onClick={() => setConfirmLogout(false)}>
@@ -132,7 +133,7 @@ export function SettingsPage() {
 
         {isDemoSession() && (
           <AppText variant="caption" className="mt-4 block text-muted">
-            Demo sessions never contact the backend and are not persisted.
+            Demo sessions use local sample data and never contact the backend.
           </AppText>
         )}
       </Card>
@@ -141,7 +142,8 @@ export function SettingsPage() {
         <dl className="flex flex-col gap-3">
           <Row label="Version" value={APP_VERSION} />
           <Row label="Platform" value="Web (Vite + React)" />
-          <Row label="Ping mode" value="Simulated in the browser" />
+          <Row label="Ping mode" value="Real HTTP probe (browser)" />
+          <Row label="Targets" value="Hostnames resolve to IP on save" />
         </dl>
       </Card>
     </div>
