@@ -1,22 +1,22 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { AccountUpsell } from '@/components/AccountUpsell';
 import { AppText } from '@/components/AppText';
 import { InfoChip } from '@/components/InfoChip';
 import { PageHeader } from '@/components/shell/Sidebar';
-import { BandwidthCard } from '@/components/diagnostics/BandwidthCard';
-import { LatencyCard } from '@/components/diagnostics/LatencyCard';
 import { PdfExportCard } from '@/components/diagnostics/PdfExportCard';
+import { SpeedTestCard } from '@/components/diagnostics/SpeedTestCard';
 import { UnavailableToolsCard } from '@/components/diagnostics/UnavailableToolsCard';
-import { measureBandwidth } from '@/lib/api/bandwidth';
 import { getTests } from '@/lib/api/tests';
 import { buildLossSlices } from '@/lib/utils/aggregate';
 import { useGeneratePdf } from '@/hooks/useGeneratePdf';
+import { useSpeedTest } from '@/hooks/useSpeedTest';
 import { useAuthStore } from '@/store/authStore';
 
 export function DiagnosticsPage() {
   const pdf = useGeneratePdf();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const speed = useSpeedTest();
 
   const testsQuery = useQuery({
     queryKey: ['tests', 'diagnostics'],
@@ -29,26 +29,15 @@ export function DiagnosticsPage() {
     [testsQuery.data]
   );
 
-  const bandwidth = useMutation({
-    mutationFn: measureBandwidth,
-  });
-
   const handleExport = () => {
     void pdf.generate({
       arp: null,
       traceroute: null,
       portScan: null,
-      bandwidth: bandwidth.data ?? null,
+      bandwidth: speed.result,
       loss: lossSlices,
     });
   };
-
-  const bandwidthError =
-    bandwidth.isError && bandwidth.error instanceof Error
-      ? bandwidth.error.message
-      : bandwidth.isError
-        ? 'No se pudo medir la velocidad.'
-        : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,13 +55,14 @@ export function DiagnosticsPage() {
         </div>
       )}
 
-      <LatencyCard />
-
-      <BandwidthCard
-        data={bandwidth.data ?? null}
-        running={bandwidth.isPending}
-        error={bandwidthError}
-        onRun={() => bandwidth.mutate()}
+      <SpeedTestCard
+        data={speed.result}
+        status={speed.status}
+        phase={speed.phase}
+        samples={speed.samples}
+        error={speed.error}
+        onRun={speed.start}
+        onReset={speed.reset}
       />
 
       <UnavailableToolsCard />
@@ -81,7 +71,7 @@ export function DiagnosticsPage() {
         onExport={handleExport}
         exporting={pdf.exporting}
         loss={lossSlices}
-        bandwidth={bandwidth.data ?? null}
+        bandwidth={speed.result}
         lossLoading={testsQuery.isLoading}
       />
 

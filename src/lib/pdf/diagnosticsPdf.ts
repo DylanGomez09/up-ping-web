@@ -102,7 +102,10 @@ export function buildDiagnosticsPdf(
 
   const summaryRows: [string, string][] = [];
   if (data.bandwidth) {
-    summaryRows.push(['Latencia media', `${data.bandwidth.avg_latency_ms} ms`]);
+    summaryRows.push([
+      'Latencia media (Cloudflare)',
+      `${data.bandwidth.avg_latency_ms} ms`,
+    ]);
     summaryRows.push([
       'Velocidad',
       `↓ ${data.bandwidth.bandwidth.downlink_mbps ?? '—'} Mbps · ↑ ${data.bandwidth.bandwidth.uplink_mbps ?? '—'} Mbps`,
@@ -111,7 +114,7 @@ export function buildDiagnosticsPdf(
   }
   if (data.loss.length > 0) {
     summaryRows.push([
-      'Pérdida de sondas',
+      'Pérdida (histórico)',
       data.loss.map((s) => `${s.label}: ${s.value.toFixed(1)}%`).join(' · '),
     ]);
   }
@@ -133,7 +136,7 @@ export function buildDiagnosticsPdf(
   if (summaryRows.length === 0) {
     summaryRows.push([
       'Estado',
-      'Sin mediciones todavía. Ejecuta una prueba de velocidad o guarda pruebas de latencia.',
+      'Sin mediciones todavía. Ejecuta la prueba de velocidad o guarda pruebas de latencia.',
     ]);
   }
 

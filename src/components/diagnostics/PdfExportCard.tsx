@@ -58,15 +58,15 @@ export function PdfExportCard({
             <Skeleton className="h-[30px] w-28 rounded-chip" />
           ) : (
             lost !== undefined && (
-              <InfoChip>{lost.toFixed(1)}% de pérdida</InfoChip>
+              <InfoChip>{lost.toFixed(1)}% de pérdida (histórico)</InfoChip>
             )
           )}
         </div>
 
         <AppText variant="caption" className="block text-muted">
-          El PDF incluye el resumen, la velocidad medida y las cifras de pérdida.
-          ARP, traceroute y el escaneo de puertos necesitan un agente local y no
-          están disponibles en el navegador.
+          El PDF incluye la velocidad medida, la latencia de Cloudflare y el
+          historial de pérdida. ARP, traceroute y el escaneo de puertos
+          necesitan un agente local y no están disponibles en el navegador.
         </AppText>
 
         <Button

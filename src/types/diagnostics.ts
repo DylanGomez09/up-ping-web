@@ -63,6 +63,22 @@ export interface LatencyBandwidthCorrelation {
   message: string;
 }
 
+/** The two transfer phases the speed test can draw. */
+export type SpeedPhase = 'download' | 'upload';
+
+/**
+ * One throughput reading taken while a transfer is in flight. Only used for
+ * the live chart: the reported speed always comes from total bytes / total
+ * time, never from these samples.
+ */
+export interface SpeedSample {
+  phase: SpeedPhase;
+  /** Seconds since the start of that phase. */
+  t: number;
+  /** Throughput of this interval, not a running average. */
+  mbps: number;
+}
+
 export interface PdfReportRef {
   report_id: string;
   title: string;
