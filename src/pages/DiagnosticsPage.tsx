@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { AccountUpsell } from '@/components/AccountUpsell';
 import { AppText } from '@/components/AppText';
 import { InfoChip } from '@/components/InfoChip';
 import { PageHeader } from '@/components/shell/Sidebar';
@@ -10,14 +11,16 @@ import { measureBandwidth } from '@/lib/api/bandwidth';
 import { getTests } from '@/lib/api/tests';
 import { buildLossSlices } from '@/lib/utils/aggregate';
 import { useGeneratePdf } from '@/hooks/useGeneratePdf';
-import { isDemoSession } from '@/lib/demo';
+import { useAuthStore } from '@/store/authStore';
 
 export function DiagnosticsPage() {
   const pdf = useGeneratePdf();
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const testsQuery = useQuery({
     queryKey: ['tests', 'diagnostics'],
     queryFn: () => getTests(null, 100),
+    enabled: Boolean(accessToken),
   });
 
   const lossSlices = useMemo(
@@ -43,19 +46,15 @@ export function DiagnosticsPage() {
     bandwidth.isError && bandwidth.error instanceof Error
       ? bandwidth.error.message
       : bandwidth.isError
-        ? 'Could not measure bandwidth.'
+        ? 'No se pudo medir la velocidad.'
         : null;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Diagnostics"
-        subtitle="Real network measurements available from this browser."
-        action={
-          <InfoChip variant={isDemoSession() ? 'highlight' : 'neutral'}>
-            {isDemoSession() ? 'Demo data' : 'Live tools'}
-          </InfoChip>
-        }
+        title="Diagnóstico"
+        subtitle="Mediciones reales disponibles desde este navegador."
+        action={<InfoChip variant="highlight">En vivo</InfoChip>}
       />
 
       {pdf.error && (
@@ -81,6 +80,14 @@ export function DiagnosticsPage() {
         loss={lossSlices}
         bandwidth={bandwidth.data ?? null}
       />
+
+      {!accessToken && (
+        <AccountUpsell
+          title="Guarda tus diagnósticos"
+          description="Con una cuenta puedes conservar las pruebas de latencia, ver tendencias y exportar el historial completo a CSV."
+          returnTo="/diagnostics"
+        />
+      )}
     </div>
   );
 }

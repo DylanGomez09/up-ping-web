@@ -44,14 +44,15 @@
   --c-border: #E9E9D6;
   --c-text-primary: #1C2A20;
   --c-text-secondary: #64735F;
-  --c-text-muted: #9BA895;
+  --c-text-muted: #68765F;
   --c-mint: #8FD6C4;
-  --c-teal: #4FA095;
-  --c-teal-deep: #33756B;
+  --c-teal: #357F74;
+  --c-teal-deep: #2C6B62;
+  --c-brand-end: #5FB3A6;
   --c-deep: #16324D;
-  --c-danger: #C8574A;
-  --c-warning: #D99A3D;
-  --c-danger-soft: rgba(200, 87, 74, 0.1);
+  --c-danger: #B94A3E;
+  --c-warning: #8A5B0F;
+  --c-danger-soft: rgba(185, 74, 62, 0.1);
 }
 
 [data-theme='dark'] {
@@ -60,21 +61,26 @@
   --c-tint: #141D18;
   --c-border: #1E2D25;
   --c-text-primary: #EAF2ED;
-  --c-text-secondary: #98AEA4;
-  --c-text-muted: #5D7369;
+  --c-text-secondary: #A3B8AE;
+  --c-text-muted: #849A90;
   --c-mint: #8FD6C4;
   --c-teal: #57B3A6;
   --c-teal-deep: #86D9C7;
+  --c-brand-end: #5FB3A6;
   --c-deep: #000000;
   --c-danger: #E2887C;
-  --c-warning: #D99A3D;
+  --c-warning: #E0A64E;
   --c-danger-soft: rgba(226, 136, 124, 0.12);
 }
 
 /* The single brand gradient, shared by InfoChip (highlight), DiagnosticSummary
    and the Profile avatar. */
 @utility gradient-brand {
-  background-image: linear-gradient(135deg, var(--c-mint) 0%, var(--c-teal) 100%);
+  background-image: linear-gradient(
+    135deg,
+    var(--c-mint) 0%,
+    var(--c-brand-end) 100%
+  );
 }
 
 @layer base {

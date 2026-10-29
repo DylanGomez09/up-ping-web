@@ -40,8 +40,9 @@ function rgb(hex: string): [number, number, number] {
 
 /** jsPDF-autotable records the last table's bottom edge on the doc instance. */
 function lastTableY(doc: jsPDF): number {
-  return (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable
-    .finalY;
+  const table = (doc as unknown as { lastAutoTable?: { finalY: number } })
+    .lastAutoTable;
+  return table?.finalY ?? PAGE_MARGIN;
 }
 
 /**
@@ -68,12 +69,12 @@ export function buildDiagnosticsPdf(
   doc.setTextColor(deepR, deepG, deepB);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text('UpPing diagnostics report', PAGE_MARGIN, 12);
+  doc.text('Informe de diagnóstico de UpPing', PAGE_MARGIN, 12);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.text(
-    `Generated ${new Date().toLocaleString()} · UpPing v${APP_VERSION}${isDark ? ' · dark theme' : ''}`,
+    `Generado ${new Date().toLocaleString('es-ES')} · UpPing v${APP_VERSION}${isDark ? ' · tema oscuro' : ''}`,
     PAGE_MARGIN,
     19
   );
@@ -97,33 +98,42 @@ export function buildDiagnosticsPdf(
   };
 
   /* ---------- Summary ---------- */
-  section('Summary');
+  section('Resumen');
 
   const summaryRows: [string, string][] = [];
   if (data.bandwidth) {
-    summaryRows.push(['Average latency', `${data.bandwidth.avg_latency_ms} ms`]);
+    summaryRows.push(['Latencia media', `${data.bandwidth.avg_latency_ms} ms`]);
     summaryRows.push([
-      'Bandwidth',
+      'Velocidad',
       `↓ ${data.bandwidth.bandwidth.downlink_mbps ?? '—'} Mbps · ↑ ${data.bandwidth.bandwidth.uplink_mbps ?? '—'} Mbps`,
     ]);
-    summaryRows.push(['Verdict', data.bandwidth.verdict]);
+    summaryRows.push(['Veredicto', data.bandwidth.verdict]);
   }
   if (data.loss.length > 0) {
     summaryRows.push([
-      'Packet loss',
+      'Pérdida de sondas',
       data.loss.map((s) => `${s.label}: ${s.value.toFixed(1)}%`).join(' · '),
     ]);
   }
   if (data.arp) {
     summaryRows.push([
-      'ARP devices',
-      `${data.arp.entries.length} found · ${data.arp.unauthorized.length} unauthorized`,
+      'Dispositivos ARP',
+      `${data.arp.entries.length} encontrados · ${data.arp.unauthorized.length} no autorizados`,
     ]);
   }
   if (data.traceroute) {
     summaryRows.push([
       'Traceroute',
-      `${data.traceroute.hops.length} hops · cause: ${data.traceroute.cause}`,
+      `${data.traceroute.hops.length} saltos · causa: ${data.traceroute.cause}`,
+    ]);
+  }
+
+  // A guest can export before measuring anything. Keep the table valid and
+  // explain the empty report instead of rendering a blank page.
+  if (summaryRows.length === 0) {
+    summaryRows.push([
+      'Estado',
+      'Sin mediciones todavía. Ejecuta una prueba de velocidad o guarda pruebas de latencia.',
     ]);
   }
 
@@ -140,19 +150,19 @@ export function buildDiagnosticsPdf(
 
   /* ---------- ARP ---------- */
   if (data.arp) {
-    section(`ARP scan — ${data.arp.scanned_subnet}`);
+    section(`Escaneo ARP — ${data.arp.scanned_subnet}`);
     autoTable(doc, {
       startY: y,
       theme: isDark ? 'plain' : 'striped',
       styles: { fontSize: 8.5, cellPadding: 2 },
       headStyles: { fillColor: [tealR, tealG, tealB], textColor: [deepR, deepG, deepB] },
-      head: [['IP address', 'MAC', 'Hostname', 'Vendor', 'Status']],
+      head: [['Dirección IP', 'MAC', 'Host', 'Fabricante', 'Estado']],
       body: data.arp.entries.map((e) => [
         e.ip,
         e.mac,
         e.hostname ?? '—',
         e.vendor ?? '—',
-        e.known ? 'Known' : 'Unauthorized',
+        e.known ? 'Conocido' : 'No autorizado',
       ]),
       margin: { left: PAGE_MARGIN, right: PAGE_MARGIN },
     });
@@ -167,12 +177,12 @@ export function buildDiagnosticsPdf(
       theme: isDark ? 'plain' : 'striped',
       styles: { fontSize: 8.5, cellPadding: 2 },
       headStyles: { fillColor: [tealR, tealG, tealB], textColor: [deepR, deepG, deepB] },
-      head: [['TTL', 'Address', 'Hostname', 'RTT']],
+      head: [['TTL', 'Dirección', 'Host', 'RTT']],
       body: data.traceroute.hops.map((hop) => [
         String(hop.ttl),
         hop.ip ?? '—',
-        hop.hostname ?? (hop.gateway_break ? 'gateway' : '—'),
-        hop.timed_out ? 'timeout' : `${hop.rtt_ms} ms`,
+        hop.hostname ?? (hop.gateway_break ? 'puerta de enlace' : '—'),
+        hop.timed_out ? 'agotado' : `${hop.rtt_ms} ms`,
       ]),
       margin: { left: PAGE_MARGIN, right: PAGE_MARGIN },
     });
@@ -181,13 +191,13 @@ export function buildDiagnosticsPdf(
 
   /* ---------- Port scan ---------- */
   if (data.portScan) {
-    section(`Port scan — ${data.portScan.host}`);
+    section(`Escaneo de puertos — ${data.portScan.host}`);
     autoTable(doc, {
       startY: y,
       theme: isDark ? 'plain' : 'striped',
       styles: { fontSize: 8.5, cellPadding: 2 },
       headStyles: { fillColor: [tealR, tealG, tealB], textColor: [deepR, deepG, deepB] },
-      head: [['Port', 'Service', 'State']],
+      head: [['Puerto', 'Servicio', 'Estado']],
       body: data.portScan.ports.map((p) => [String(p.port), p.service, p.state]),
       margin: { left: PAGE_MARGIN, right: PAGE_MARGIN },
     });
@@ -202,7 +212,7 @@ export function buildDiagnosticsPdf(
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.text(
-      `UpPing · network diagnostics workshop · page ${page} of ${pages}`,
+      `UpPing · diagnóstico de red · página ${page} de ${pages}`,
       PAGE_MARGIN,
       doc.internal.pageSize.getHeight() - 8
     );

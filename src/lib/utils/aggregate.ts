@@ -69,12 +69,12 @@ export function buildLossSlices(tests: TestResult[]): LossSlice[] {
 
   return [
     {
-      label: 'Delivered',
+      label: 'Entregados',
       value: Math.round(deliveredPercent * 100) / 100,
       color: 'var(--c-teal)',
     },
     {
-      label: 'Lost',
+      label: 'Perdidos',
       value: Math.round(lostPercent * 100) / 100,
       color: 'var(--c-danger)',
     },

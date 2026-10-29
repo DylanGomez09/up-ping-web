@@ -110,7 +110,7 @@ export async function resolveToIp(target: string): Promise<string> {
   const host = extractHostname(target);
 
   if (!host) {
-    throw new Error('Enter a host or IP address before saving.');
+    throw new Error('Escribe un host o una IP antes de guardar.');
   }
 
   if (isIpv4(host) || isIpv6(host)) {
@@ -135,6 +135,6 @@ export async function resolveToIp(target: string): Promise<string> {
   }
 
   throw new Error(
-    `Could not resolve "${host}" to an IP address. The server stores an IP, so try entering one directly (for example 8.8.8.8).`
+    `No se pudo resolver "${host}" a una IP. El servidor guarda una IP, así que prueba a escribirla directamente (por ejemplo 8.8.8.8).`
   );
 }

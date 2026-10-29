@@ -32,7 +32,7 @@ export function useGeneratePdf() {
         );
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Could not build the PDF report.'
+          err instanceof Error ? err.message : 'No se pudo generar el informe PDF.'
         );
       } finally {
         setExporting(false);

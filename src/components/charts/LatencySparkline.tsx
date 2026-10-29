@@ -7,8 +7,8 @@ export interface LatencySparklineProps {
 }
 
 /**
- * Compact 24-hour latency trend, drawn client-side from the stubbed
- * `/diagnostics/latency-24h` payload.
+ * Compact 24-hour latency trend, drawn client-side from the tests saved in the
+ * last day.
  */
 export function LatencySparkline({ points, height = 56 }: LatencySparklineProps) {
   const width = 320;
@@ -47,7 +47,7 @@ export function LatencySparkline({ points, height = 56 }: LatencySparklineProps)
       preserveAspectRatio="none"
       className="h-auto w-full text-teal"
       role="img"
-      aria-label="Latency over the last 24 hours"
+      aria-label="Latencia de las últimas 24 horas"
     >
       {path && (
         <path

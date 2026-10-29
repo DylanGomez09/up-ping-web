@@ -1,19 +1,15 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { Skeleton } from '@/components/Skeleton';
+import { safeInternalPath } from '@/lib/navigation';
 import { useAuthStore } from '@/store/authStore';
 
 /**
- * Guards authenticated routes. While the persisted session is being
- * rehydrated we render a neutral placeholder instead of redirecting, otherwise
- * a hard refresh would bounce the user to /login for a frame.
- *
- * Signed-in users hitting /login or /register are bounced to /dashboard.
+ * Waits for the persisted session before rendering. Without this a hard
+ * refresh would flash the guest state for one frame on every signed-in page.
  */
-export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const accessToken = useAuthStore((s) => s.accessToken);
+export function HydratedRoute({ children }: { children: ReactNode }) {
   const hydrated = useAuthStore((s) => s._hydrated);
-  const location = useLocation();
 
   if (!hydrated) {
     return (
@@ -27,24 +23,45 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!accessToken) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  }
-
   return <>{children}</>;
+}
+
+/**
+ * Guards account-only routes. Measuring and diagnostics are public, so only
+ * the profile and the save/history surfaces use this wrapper.
+ */
+export function ProtectedRoute({ children }: { children: ReactNode }) {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const location = useLocation();
+
+  return (
+    <HydratedRoute>
+      {accessToken ? (
+        children
+      ) : (
+        <Navigate
+          to="/login"
+          replace
+          state={{ from: `${location.pathname}${location.search}` }}
+        />
+      )}
+    </HydratedRoute>
+  );
 }
 
 /** Public-only wrapper for the auth screens. */
 export function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const accessToken = useAuthStore((s) => s.accessToken);
   const hydrated = useAuthStore((s) => s._hydrated);
+  const location = useLocation();
 
   if (!hydrated) {
     return <>{children}</>;
   }
 
   if (accessToken) {
-    return <Navigate to="/dashboard" replace />;
+    const state = (location.state ?? {}) as { from?: string };
+    return <Navigate to={safeInternalPath(state.from)} replace />;
   }
 
   return <>{children}</>;

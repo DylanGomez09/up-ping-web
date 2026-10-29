@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { Field } from '@/components/Field';
 import { Icon } from '@/components/Icon';
@@ -8,6 +8,7 @@ import { AppText } from '@/components/AppText';
 import { AuthShell } from '@/components/shell/AuthShell';
 import { loginRequest, meRequest, registerRequest } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
+import { safeInternalPath } from '@/lib/navigation';
 import { useAuthStore } from '@/store/authStore';
 
 interface FieldErrors {
@@ -16,6 +17,11 @@ interface FieldErrors {
   password?: string;
   confirm?: string;
   form?: string;
+}
+
+interface LocationState {
+  from?: string;
+  reason?: string;
 }
 
 /** Single meter shown under the password fields. */
@@ -27,7 +33,7 @@ function strengthOf(password: string): { score: number; label: string } {
   if (/\d/.test(password)) score += 1;
   if (/[^A-Za-z0-9]/.test(password)) score += 1;
 
-  const labels = ['Too short', 'Weak', 'Fair', 'Good', 'Strong', 'Strong'];
+  const labels = ['Muy corta', 'Débil', 'Aceptable', 'Buena', 'Fuerte', 'Fuerte'];
   return { score, label: labels[score] };
 }
 
@@ -36,6 +42,10 @@ const METER_TEXT = ['text-danger', 'text-danger', 'text-warning', 'text-warning'
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state ?? {}) as LocationState;
+  const destination = safeInternalPath(state.from);
+
   const setTokens = useAuthStore((s) => s.setTokens);
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -51,18 +61,18 @@ export function RegisterPage() {
   const validate = (): FieldErrors => {
     const next: FieldErrors = {};
     if (!name.trim()) {
-      next.name = 'Name is required';
+      next.name = 'El nombre es obligatorio';
     }
     if (!email.trim()) {
-      next.email = 'Email is required';
+      next.email = 'El correo es obligatorio';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      next.email = 'Enter a valid email address';
+      next.email = 'Escribe un correo válido';
     }
     if (password.length < 8) {
-      next.password = 'Use at least 8 characters';
+      next.password = 'Usa al menos 8 caracteres';
     }
     if (confirm !== password) {
-      next.confirm = 'Passwords do not match';
+      next.confirm = 'Las contraseñas no coinciden';
     }
     return next;
   };
@@ -94,13 +104,13 @@ export function RegisterPage() {
       } catch {
         // Registration already succeeded; a /me failure is not fatal here.
       }
-      navigate('/dashboard', { replace: true });
+      navigate(destination, { replace: true });
     } catch (err) {
       setErrors({
         form:
           err instanceof ApiError
             ? err.message
-            : 'Could not create the account. Please try again.',
+            : 'No se pudo crear la cuenta. Inténtalo de nuevo.',
       });
     } finally {
       setLoading(false);
@@ -109,23 +119,32 @@ export function RegisterPage() {
 
   return (
     <AuthShell
-      title="Create your account"
-      subtitle="Start diagnosing your network in minutes"
+      title="Crea tu cuenta"
+      subtitle="Guarda tu historial y vuelve a tus pruebas cuando quieras"
       footer={
         <>
-          Already registered?{' '}
+          ¿Ya tienes cuenta?{' '}
           <Link
             to="/login"
+            state={{ from: destination, reason: state.reason }}
             className="font-semibold text-teal transition-opacity hover:opacity-80"
           >
-            Sign in
+            Iniciar sesión
           </Link>
         </>
       }
     >
+      {state.reason === 'save' && (
+        <div className="mb-5 rounded-control border border-border bg-tint px-4 py-3">
+          <AppText variant="caption" className="block text-secondary">
+            Crea la cuenta y guardaremos tu última prueba automáticamente.
+          </AppText>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Field
-          label="Name"
+          label="Nombre"
           autoComplete="name"
           placeholder="Ada Lovelace"
           value={name}
@@ -135,11 +154,11 @@ export function RegisterPage() {
         />
 
         <Field
-          label="Email"
+          label="Correo"
           type="email"
           inputMode="email"
           autoComplete="email"
-          placeholder="you@workshop.local"
+          placeholder="tu@correo.com"
           value={email}
           error={errors.email}
           onChange={(e) => setEmail(e.target.value)}
@@ -147,10 +166,10 @@ export function RegisterPage() {
 
         <div>
           <Field
-            label="Password"
+            label="Contraseña"
             type="password"
             autoComplete="new-password"
-            placeholder="At least 8 characters"
+            placeholder="Al menos 8 caracteres"
             value={password}
             error={errors.password}
             onChange={(e) => setPassword(e.target.value)}
@@ -180,10 +199,10 @@ export function RegisterPage() {
         </div>
 
         <Field
-          label="Confirm password"
+          label="Repite la contraseña"
           type="password"
           autoComplete="new-password"
-          placeholder="Repeat your password"
+          placeholder="Vuelve a escribirla"
           value={confirm}
           error={errors.confirm}
           onChange={(e) => setConfirm(e.target.value)}
@@ -201,9 +220,18 @@ export function RegisterPage() {
         )}
 
         <Button type="submit" size="lg" fullWidth loading={loading}>
-          Create account
+          Crear cuenta
         </Button>
       </form>
+
+      <div className="mt-4 text-center">
+        <Link
+          to="/dashboard"
+          className="text-[12px] font-semibold text-teal transition-opacity hover:opacity-80"
+        >
+          Volver a la app sin registrarme
+        </Link>
+      </div>
     </AuthShell>
   );
 }

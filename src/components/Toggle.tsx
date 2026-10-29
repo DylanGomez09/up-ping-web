@@ -55,7 +55,7 @@ export function Toggle({
           role="switch"
           checked={checked}
           disabled={disabled}
-          aria-label={label ? undefined : 'Toggle'}
+          aria-label={label ? undefined : 'Alternar'}
           aria-describedby={descriptionId}
           onChange={(e) => onChange(e.target.checked)}
           className="peer sr-only"

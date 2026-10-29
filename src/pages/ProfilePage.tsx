@@ -8,7 +8,6 @@ import { useSignOut } from '@/hooks/useSignOut';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/hooks/useTheme';
 import { APP_VERSION } from '@/lib/config';
-import { isDemoSession } from '@/lib/demo';
 import { formatLongDate, licenseLabel } from '@/lib/utils/format';
 
 export function ProfilePage() {
@@ -25,8 +24,8 @@ export function ProfilePage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Profile"
-        subtitle="Your account details and preferences."
+        title="Perfil"
+        subtitle="Los datos de tu cuenta y tus preferencias."
         action={<InfoChip>v{APP_VERSION}</InfoChip>}
       />
 
@@ -41,7 +40,7 @@ export function ProfilePage() {
 
           <div className="min-w-0 flex-1 text-center sm:text-left">
             <AppText variant="title" className="block truncate text-primary">
-              {user?.name ?? 'Unknown user'}
+              {user?.name ?? 'Usuario desconocido'}
             </AppText>
             <AppText variant="body" mono className="mt-0.5 block text-secondary">
               {user?.email ?? '—'}
@@ -55,22 +54,22 @@ export function ProfilePage() {
         </div>
       </Card>
 
-      <Card title="Account details">
+      <Card title="Datos de la cuenta">
         <dl className="flex flex-col gap-4">
-          <Row label="User ID" value={user?.id ?? '—'} mono />
-          <Row label="Email" value={user?.email ?? '—'} mono />
-          <Row label="License tier" value={user?.license_tier ?? '—'} mono />
+          <Row label="ID de usuario" value={user?.id ?? '—'} mono />
+          <Row label="Correo" value={user?.email ?? '—'} mono />
+          <Row label="Licencia" value={user?.license_tier ?? '—'} mono />
           <Row
-            label="Member since"
+            label="Miembro desde"
             value={user?.created_at ? formatLongDate(user.created_at) : '—'}
           />
         </dl>
       </Card>
 
-      <Card title="Preferences">
+      <Card title="Preferencias">
         <div className="flex items-center justify-between gap-4">
           <AppText variant="body" className="font-medium">
-            Theme
+            Tema
           </AppText>
           <Button
             variant="secondary"
@@ -78,22 +77,14 @@ export function ProfilePage() {
             onClick={() => (theme === 'dark' ? setTheme('light') : setTheme('dark'))}
           >
             <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />
-            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
           </Button>
         </div>
       </Card>
 
-      {isDemoSession() && (
-        <div className="rounded-control border border-border bg-tint px-4 py-3">
-          <AppText variant="caption" className="block text-secondary">
-            You are in demo mode. Data is synthetic and nothing is sent to a server.
-          </AppText>
-        </div>
-      )}
-
       <Button variant="danger" onClick={() => void signOut()} loading={signingOut}>
         <Icon name="logout" size={16} />
-        Sign out
+        Cerrar sesión
       </Button>
     </div>
   );

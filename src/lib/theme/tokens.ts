@@ -22,12 +22,12 @@ export const lightTheme: ThemeTokens = {
   border: '#E9E9D6',
   'text-primary': '#1C2A20',
   'text-secondary': '#64735F',
-  'text-muted': '#9BA895',
+  'text-muted': '#68765F',
   mint: '#8FD6C4',
-  teal: '#4FA095',
-  'teal-deep': '#33756B',
+  teal: '#357F74',
+  'teal-deep': '#2C6B62',
   deep: '#16324D',
-  danger: '#C8574A',
+  danger: '#B94A3E',
 };
 
 export const darkTheme: ThemeTokens = {
@@ -36,8 +36,8 @@ export const darkTheme: ThemeTokens = {
   tint: '#141D18',
   border: '#1E2D25',
   'text-primary': '#EAF2ED',
-  'text-secondary': '#98AEA4',
-  'text-muted': '#5D7369',
+  'text-secondary': '#A3B8AE',
+  'text-muted': '#849A90',
   mint: '#8FD6C4',
   teal: '#57B3A6',
   'teal-deep': '#86D9C7',

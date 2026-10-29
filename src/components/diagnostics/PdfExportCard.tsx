@@ -25,19 +25,19 @@ export function PdfExportCard({
   loss,
   bandwidth,
 }: PdfExportCardProps) {
-  const lost = loss.find((slice) => slice.label === 'Lost')?.value;
+  const lost = loss.find((slice) => slice.label === 'Perdidos')?.value;
 
   return (
     <Card
-      title="Export report"
-      subtitle="Diagnostics are rendered into a PDF on this device"
+      title="Exportar informe"
+      subtitle="El diagnóstico se genera en PDF en este dispositivo"
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           {bandwidth ? (
             <>
               <InfoChip variant="highlight">
-                {bandwidth.avg_latency_ms} ms avg
+                {bandwidth.avg_latency_ms} ms de media
               </InfoChip>
               <InfoChip>
                 ↓ {bandwidth.bandwidth.downlink_mbps ?? '—'} Mbps
@@ -47,16 +47,16 @@ export function PdfExportCard({
               </InfoChip>
             </>
           ) : (
-            <InfoChip>No bandwidth measured</InfoChip>
+            <InfoChip>Sin velocidad medida</InfoChip>
           )}
 
-          {lost !== undefined && <InfoChip>{lost.toFixed(1)}% loss</InfoChip>}
+          {lost !== undefined && <InfoChip>{lost.toFixed(1)}% de pérdida</InfoChip>}
         </div>
 
         <AppText variant="caption" className="block text-muted">
-          The PDF includes the summary, measured bandwidth and packet-loss
-          figures. ARP, traceroute and port scans require a local agent and are
-          not available in the browser.
+          El PDF incluye el resumen, la velocidad medida y las cifras de pérdida.
+          ARP, traceroute y el escaneo de puertos necesitan un agente local y no
+          están disponibles en el navegador.
         </AppText>
 
         <Button
@@ -66,7 +66,7 @@ export function PdfExportCard({
           className="self-start"
         >
           <Icon name="download" size={16} />
-          Generate PDF
+          Generar PDF
         </Button>
       </div>
     </Card>

@@ -12,7 +12,7 @@ export interface ErrorStateProps {
 export function ErrorState({
   message,
   onRetry,
-  retryLabel = 'Try again',
+  retryLabel = 'Reintentar',
 }: ErrorStateProps) {
   return (
     <div
@@ -26,7 +26,7 @@ export function ErrorState({
         <Icon name="activity" size={24} />
       </div>
       <AppText variant="subtitle" className="text-primary">
-        Something went wrong
+        Algo salió mal
       </AppText>
       <AppText variant="caption" className="mt-1.5 max-w-sm text-muted">
         {message}

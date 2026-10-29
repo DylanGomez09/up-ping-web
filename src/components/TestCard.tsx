@@ -13,12 +13,12 @@ export interface TestCardProps {
 
 function lossLabel(loss: number): { text: string; tone: 'ok' | 'warn' | 'bad' } {
   if (loss <= 0) {
-    return { text: 'No loss', tone: 'ok' };
+    return { text: 'Sin pérdida', tone: 'ok' };
   }
   if (loss < 5) {
-    return { text: `${loss.toFixed(1)}% loss`, tone: 'warn' };
+    return { text: `${loss.toFixed(1)}% de pérdida`, tone: 'warn' };
   }
-  return { text: `${loss.toFixed(1)}% loss`, tone: 'bad' };
+  return { text: `${loss.toFixed(1)}% de pérdida`, tone: 'bad' };
 }
 
 const TONE_CLASS: Record<'ok' | 'warn' | 'bad', string> = {
@@ -28,9 +28,8 @@ const TONE_CLASS: Record<'ok' | 'warn' | 'bad', string> = {
 };
 
 /**
- * One saved ping run in the History list. In mobile this row is swiped to
- * reveal the delete action; on the web that gesture does not exist, so the
- * delete button is always visible and asks for confirmation first.
+ * One saved ping run in the History list. The delete button is always visible
+ * and asks for confirmation first.
  */
 export function TestCard({ test, onDelete, deleting = false }: TestCardProps) {
   const loss = lossLabel(test.loss_percent);
@@ -39,7 +38,7 @@ export function TestCard({ test, onDelete, deleting = false }: TestCardProps) {
     <div className="rounded-card border border-border bg-surface p-4 shadow-raised transition-shadow hover:shadow-card sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <AppText variant="subtitle" mono className="truncate text-primary">
               {test.target}
             </AppText>
@@ -54,7 +53,7 @@ export function TestCard({ test, onDelete, deleting = false }: TestCardProps) {
                 {test.avg_latency_ms} ms
               </AppText>
               <AppText variant="caption" className="text-muted">
-                avg
+                media
               </AppText>
             </span>
 
@@ -63,7 +62,7 @@ export function TestCard({ test, onDelete, deleting = false }: TestCardProps) {
             </AppText>
 
             <AppText variant="caption" mono className="text-muted">
-              {test.packet_count} probes
+              {test.packet_count} sondas
             </AppText>
           </div>
         </div>
@@ -74,12 +73,12 @@ export function TestCard({ test, onDelete, deleting = false }: TestCardProps) {
           <Button
             variant="danger-soft"
             size="sm"
-            aria-label={`Delete test from ${test.target}`}
+            aria-label={`Borrar la prueba de ${test.target}`}
             disabled={deleting}
             onClick={() => {
               if (
                 window.confirm(
-                  `Delete the test for ${test.target}? This cannot be undone.`
+                  `¿Borrar la prueba de ${test.target}? Esta acción no se puede deshacer.`
                 )
               ) {
                 onDelete(test.id);

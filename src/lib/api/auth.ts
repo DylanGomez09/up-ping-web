@@ -1,5 +1,4 @@
 import { apiGet, apiPost } from '@/lib/api/client';
-import { demoUser, isDemoSession } from '@/lib/demo';
 import type { LoginRequest, RegisterRequest, TokenResponse } from '@/types/auth';
 import type { User } from '@/types/user';
 
@@ -40,18 +39,12 @@ export async function registerRequest(body: RegisterRequest): Promise<User> {
 }
 
 export async function meRequest(): Promise<User> {
-  if (isDemoSession()) {
-    return demoUser();
-  }
   const raw = await apiGet<UserResponse>('/me');
   return mapUser(raw);
 }
 
 /** Best-effort server-side revocation; local state is cleared by the caller. */
 export async function logoutRequest(refreshToken: string): Promise<void> {
-  if (isDemoSession()) {
-    return;
-  }
   await apiPost<void>('/auth/logout', { refresh_token: refreshToken }, {
     auth: false,
   });

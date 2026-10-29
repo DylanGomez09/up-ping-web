@@ -70,7 +70,7 @@ async function measureLatency(): Promise<number> {
   }
 
   if (samples.length === 0) {
-    throw new Error('Could not reach speed.cloudflare.com. Check your connection and try again.');
+    throw new Error('No se pudo contactar con speed.cloudflare.com. Revisa tu conexión e inténtalo de nuevo.');
   }
 
   samples.sort((a, b) => a - b);
@@ -92,7 +92,7 @@ async function measureDownload(): Promise<number> {
   );
 
   if (!res.ok) {
-    throw new Error(`Download measurement failed (HTTP ${res.status}).`);
+    throw new Error(`La medición de descarga falló (HTTP ${res.status}).`);
   }
 
   const body = await res.arrayBuffer();
@@ -100,7 +100,7 @@ async function measureDownload(): Promise<number> {
   const bytes = body.byteLength || DOWNLOAD_BYTES;
 
   if (seconds <= 0) {
-    throw new Error('Download measurement was too short to be reliable.');
+    throw new Error('La medición de descarga fue demasiado corta para ser fiable.');
   }
 
   return round1((bytes * 8) / seconds / 1_000_000);
@@ -123,7 +123,7 @@ async function measureUpload(): Promise<number> {
   );
 
   if (!res.ok) {
-    throw new Error(`Upload measurement failed (HTTP ${res.status}).`);
+    throw new Error(`La medición de subida falló (HTTP ${res.status}).`);
   }
 
   // Wait for the response so the timer covers the whole round-trip.
@@ -131,7 +131,7 @@ async function measureUpload(): Promise<number> {
   const seconds = (now() - startedAt) / 1000;
 
   if (seconds <= 0) {
-    throw new Error('Upload measurement was too short to be reliable.');
+    throw new Error('La medición de subida fue demasiado corta para ser fiable.');
   }
 
   return round1((UPLOAD_BYTES * 8) / seconds / 1_000_000);
@@ -160,13 +160,13 @@ export async function measureBandwidth(): Promise<LatencyBandwidthCorrelation> {
 
   const verdict = verdictFor(avgLatency, downlink);
   const messages = {
-    ok: `Low latency with ${downlink} Mbps down. The link is not congested.`,
-    warning: `Latency is elevated or throughput is limited. The link may be contended.`,
-    critical: `High latency or very low throughput. Check the local network or your ISP.`,
+    ok: `Latencia baja con ${downlink} Mbps de descarga. El enlace no está congestionado.`,
+    warning: `La latencia es elevada o el ancho de banda está limitado. Puede haber contención en el enlace.`,
+    critical: `Latencia alta o rendimiento muy bajo. Revisa la red local o tu proveedor.`,
   } as const;
 
   const uploadNote =
-    uplink === null ? ' Upload could not be measured.' : '';
+    uplink === null ? ' No se pudo medir la subida.' : '';
 
   return {
     avg_latency_ms: avgLatency,

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AccountUpsell } from '@/components/AccountUpsell';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -11,19 +12,22 @@ import { PageHeader } from '@/components/shell/Sidebar';
 import { Skeleton } from '@/components/Skeleton';
 import { TestCard } from '@/components/TestCard';
 import { deleteTest, exportTests, getTests } from '@/lib/api/tests';
-import { useSettingsStore } from '@/store/settingsStore';
 import { downloadBlob } from '@/lib/utils/download';
+import { useAuthStore } from '@/store/authStore';
 
 export function HistoryPage() {
   const queryClient = useQueryClient();
-  const autoSaveCsv = useSettingsStore((s) => s.autoSaveCsv);
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const [exportError, setExportError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  const testsQuery = useQuery({
+  const testsQuery = useInfiniteQuery({
     queryKey: ['tests'],
-    queryFn: () => getTests(null, 100),
+    queryFn: ({ pageParam }) => getTests(pageParam, 50),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.next_cursor,
+    enabled: Boolean(accessToken),
   });
 
   const deleteMutation = useMutation({
@@ -40,24 +44,60 @@ export function HistoryPage() {
       const csv = await exportTests();
       downloadBlob(
         new Blob([csv], { type: 'text/csv;charset=utf-8' }),
-        `uppping-tests-${new Date().toISOString().slice(0, 10)}.csv`
+        `uppping-pruebas-${new Date().toISOString().slice(0, 10)}.csv`
       );
     } catch (err) {
       setExportError(
-        err instanceof Error ? err.message : 'Export failed. Please try again.'
+        err instanceof Error ? err.message : 'La exportación falló. Inténtalo de nuevo.'
       );
     } finally {
       setExporting(false);
     }
   };
 
-  const items = testsQuery.data?.items ?? [];
+  const items = testsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const total = testsQuery.data?.pages[0]?.total;
+
+  if (!accessToken) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title="Historial"
+          subtitle="Tus pruebas guardadas, tendencias y exportación."
+        />
+        <AccountUpsell
+          title="Tu historial empieza con una cuenta"
+          description="Puedes medir sin registrarte, pero guardar resultados y exportarlos necesita una cuenta. Es gratis y tarda menos de un minuto."
+          returnTo="/history"
+        />
+        <Card title="Qué obtienes" subtitle="Solo para cuentas registradas">
+          <ul className="flex flex-col gap-3">
+            {[
+              'Cada prueba guardada con su latencia, pérdida y fecha.',
+              'Desglose acumulado y tendencia de las últimas 24 horas.',
+              'Exportación CSV de todo tu historial.',
+              'Disponible cuando vuelvas desde cualquier navegador.',
+            ].map((line) => (
+              <li key={line} className="flex items-start gap-2.5">
+                <span aria-hidden="true" className="mt-0.5 text-teal">
+                  <Icon name="check" size={16} strokeWidth={2.2} />
+                </span>
+                <AppText variant="caption" className="text-secondary">
+                  {line}
+                </AppText>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="History"
-        subtitle="Every saved ping run on your UpPing account."
+        title="Historial"
+        subtitle="Cada prueba de ping guardada en tu cuenta de UpPing."
         action={
           <Button
             variant="secondary"
@@ -66,18 +106,10 @@ export function HistoryPage() {
             onClick={() => void handleExport()}
           >
             <Icon name="download" size={16} />
-            Export CSV
+            Exportar CSV
           </Button>
         }
       />
-
-      {autoSaveCsv && (
-        <div className="rounded-control border border-border bg-tint px-4 py-3">
-          <AppText variant="caption" className="block text-secondary">
-            Auto-save CSV is on in Settings — results are kept on download.
-          </AppText>
-        </div>
-      )}
 
       {exportError && (
         <div role="alert" className="rounded-control bg-danger-soft px-4 py-3">
@@ -87,18 +119,28 @@ export function HistoryPage() {
         </div>
       )}
 
+      {deleteMutation.isError && (
+        <div role="alert" className="rounded-control bg-danger-soft px-4 py-3">
+          <AppText variant="caption" className="block text-danger">
+            {deleteMutation.error instanceof Error
+              ? deleteMutation.error.message
+              : 'No se pudo borrar la prueba.'}
+          </AppText>
+        </div>
+      )}
+
       <Card
-        title="Saved tests"
+        title="Pruebas guardadas"
         subtitle={
-          testsQuery.data
-            ? `${testsQuery.data.total ?? items.length} saved · showing ${items.length}`
+          total !== undefined
+            ? `${total} guardadas · mostrando ${items.length}`
             : undefined
         }
         flush
       >
         {testsQuery.isError ? (
           <ErrorState
-            message="Could not load your saved tests."
+            message="No se pudieron cargar tus pruebas guardadas."
             onRetry={() => void testsQuery.refetch()}
           />
         ) : testsQuery.isLoading ? (
@@ -110,8 +152,8 @@ export function HistoryPage() {
         ) : items.length === 0 ? (
           <EmptyState
             mark={<Icon name="clock" size={26} />}
-            title="No saved tests yet"
-            description="Run a ping test from the dashboard and save the result to see it here."
+            title="Aún no hay pruebas guardadas"
+            description="Ejecuta una prueba de ping desde el panel y guarda el resultado para verlo aquí."
           />
         ) : (
           <ul className="flex flex-col gap-3">
@@ -128,10 +170,23 @@ export function HistoryPage() {
             ))}
           </ul>
         )}
+
+        {testsQuery.hasNextPage && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={testsQuery.isFetchingNextPage}
+              onClick={() => void testsQuery.fetchNextPage()}
+            >
+              Cargar más
+            </Button>
+          </div>
+        )}
       </Card>
 
       <div className="flex justify-center">
-        <InfoChip>Synced with your UpPing account</InfoChip>
+        <InfoChip>Sincronizado con tu cuenta de UpPing</InfoChip>
       </div>
     </div>
   );

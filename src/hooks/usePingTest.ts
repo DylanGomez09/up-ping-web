@@ -155,6 +155,36 @@ export function normalizeTarget(target: string): string | null {
   }
 }
 
+/**
+ * Browsers block plain-HTTP requests made from an HTTPS page (mixed content).
+ * LAN targets are probed over HTTP, so from the deployed HTTPS site they would
+ * always time out. Loopback is exempt because it is treated as trustworthy.
+ */
+function blockedByMixedContent(url: string): boolean {
+  if (typeof window === 'undefined' || window.location.protocol !== 'https:') {
+    return false;
+  }
+  if (!url.startsWith('http://')) {
+    return false;
+  }
+
+  const isLoopback = (host: string) =>
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '::1' ||
+    host === '[::1]';
+
+  if (isLoopback(window.location.hostname)) {
+    return false;
+  }
+
+  try {
+    return !isLoopback(new URL(url).hostname);
+  } catch {
+    return true;
+  }
+}
+
 /** Cache-busting query so a CDN/proxy cannot answer from cache. */
 function cacheBust(url: string): string {
   try {
@@ -373,7 +403,7 @@ export function usePingTest() {
       if (!cleanTarget) {
         setState((prev) => ({
           ...prev,
-          error: 'Enter a host or IP to test.',
+          error: 'Escribe un host o una IP para probar.',
         }));
         return;
       }
@@ -382,7 +412,17 @@ export function usePingTest() {
       if (!url) {
         setState((prev) => ({
           ...prev,
-          error: 'Enter a valid host, IP address or URL (for example 8.8.8.8 or dns.google).',
+          error:
+            'Escribe un host, una IP o una URL válidos (por ejemplo dns.google o 192.168.1.1).',
+        }));
+        return;
+      }
+
+      if (blockedByMixedContent(url)) {
+        setState((prev) => ({
+          ...prev,
+          error:
+            'Esta página se sirve por HTTPS y el navegador bloquea las peticiones HTTP a la red local. Prueba un host público o abre UpPing en localhost.',
         }));
         return;
       }

@@ -87,7 +87,7 @@ export function PingChart({
         preserveAspectRatio="none"
         className="h-auto w-full text-teal"
         role="img"
-        aria-label={`Latency over ${samples.length} probes`}
+        aria-label={`Latencia sobre ${samples.length} sondas`}
       >
         {geometry.path && (
           <path

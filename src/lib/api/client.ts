@@ -1,5 +1,4 @@
 import { useAuthStore } from '@/store/authStore';
-import { isDemoSession } from '@/lib/demo';
 import { API_URL } from '@/lib/config';
 import type { TokenResponse } from '@/types/auth';
 
@@ -46,14 +45,9 @@ async function refreshAccessToken(): Promise<string> {
   }
 
   refreshInFlight = (async () => {
-    if (isDemoSession()) {
-      // Demo sessions never hit the refresh endpoint.
-      return 'uppping.demo.access';
-    }
-
     const refreshToken = useAuthStore.getState().refreshToken;
     if (!refreshToken) {
-      throw new ApiError('No refresh token available', 401);
+      throw new ApiError('No hay token de renovación disponible', 401);
     }
 
     const res = await fetch(`${API_URL}/auth/refresh`, {
@@ -65,7 +59,7 @@ async function refreshAccessToken(): Promise<string> {
     if (!res.ok) {
       // Refresh failed: clear the session.
       useAuthStore.getState().logout();
-      throw new ApiError('Session expired', res.status);
+      throw new ApiError('La sesión expiró', res.status);
     }
 
     const data = (await res.json()) as TokenResponse;
@@ -126,7 +120,7 @@ function extractErrorMessage(
     }
   }
   if (status === 401) {
-    return 'Not authorized';
+    return 'No autorizado';
   }
   return fallback;
 }
@@ -147,7 +141,7 @@ async function rawFetch<T>(
   } catch {
     return {
       ok: false,
-      error: new ApiError('Network request failed', 0),
+      error: new ApiError('La petición de red falló', 0),
     };
   }
 
@@ -161,7 +155,7 @@ async function rawFetch<T>(
   return {
     ok: false,
     error: new ApiError(
-      extractErrorMessage(res.status, payload, `Request failed (${res.status})`),
+      extractErrorMessage(res.status, payload, `La petición falló (${res.status})`),
       res.status,
       payload
     ),

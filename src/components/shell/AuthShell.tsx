@@ -52,10 +52,10 @@ export function AuthShell({
 
         <p className="mt-8 text-center">
           <Link
-            to="/login"
+            to="/"
             className="text-[12px] text-muted transition-colors hover:text-secondary"
           >
-            UpPing · network diagnostics workshop
+            UpPing · diagnóstico de red desde el navegador
           </Link>
         </p>
       </div>

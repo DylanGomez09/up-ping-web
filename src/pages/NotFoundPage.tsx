@@ -19,13 +19,13 @@ export function NotFoundPage() {
       <AppText variant="title" mono className="block text-primary">
         404
       </AppText>
-      <AppText variant="body" className="mt-2 max-w-xs text-secondary">
-        That page does not exist. It may have been renamed, or the link is
-        incomplete.
+      <AppText variant="body" className="mt-2 max-w-sm text-secondary">
+        Esta página no existe. Puede que haya cambiado de nombre o que el enlace
+        esté incompleto.
       </AppText>
 
-      <Link to={accessToken ? '/dashboard' : '/login'} className="mt-6">
-        <Button>{accessToken ? 'Back to dashboard' : 'Go to sign in'}</Button>
+      <Link to={accessToken ? '/dashboard' : '/'} className="mt-6">
+        <Button>{accessToken ? 'Volver al panel' : 'Volver al inicio'}</Button>
       </Link>
     </div>
   );

@@ -8,8 +8,5 @@
 export const API_URL: string =
   import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
-export const IS_DEMO_ENABLED: boolean =
-  import.meta.env.VITE_DEMO_MODE === 'true';
-
 export const APP_VERSION: string =
   import.meta.env.VITE_APP_VERSION ?? '1.0.0';

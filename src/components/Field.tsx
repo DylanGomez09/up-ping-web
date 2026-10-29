@@ -38,7 +38,7 @@ export function Field({
       <label htmlFor={id} className="mb-1.5 block">
         <AppText variant="label" className="text-secondary">
           {label}
-          {optional && <span className="ml-1 font-normal text-muted">(optional)</span>}
+          {optional && <span className="ml-1 font-normal text-muted">(opcional)</span>}
         </AppText>
       </label>
 

@@ -14,9 +14,9 @@ const VERDICT_TONE = {
 } as const;
 
 const VERDICT_LABEL = {
-  ok: 'Healthy',
-  warning: 'Contended',
-  critical: 'Congested',
+  ok: 'Saludable',
+  warning: 'Disputada',
+  critical: 'Congestionada',
 } as const;
 
 export interface BandwidthCardProps {
@@ -33,8 +33,8 @@ export interface BandwidthCardProps {
 export function BandwidthCard({ data, running, error, onRun }: BandwidthCardProps) {
   return (
     <Card
-      title="Bandwidth vs latency"
-      subtitle="Measured from this browser through speed.cloudflare.com"
+      title="Velocidad frente a latencia"
+      subtitle="Medido desde este navegador a través de speed.cloudflare.com"
       action={
         <Button
           variant="secondary"
@@ -43,26 +43,25 @@ export function BandwidthCard({ data, running, error, onRun }: BandwidthCardProp
           loading={running}
           disabled={running}
         >
-          {data ? 'Run again' : 'Run speed test'}
+          {data ? 'Repetir' : 'Medir velocidad'}
         </Button>
       }
     >
       {error ? (
-        <ErrorState message={error} onRetry={onRun} retryLabel="Run again" />
+        <ErrorState message={error} onRetry={onRun} retryLabel="Reintentar" />
       ) : running ? (
         <div className="space-y-3">
           <Skeleton className="h-6 w-40" />
           <Skeleton className="h-4 w-full" />
           <AppText variant="caption" className="block text-muted">
-            Downloading about 10 MB and uploading about 2 MB. This takes a few
-            seconds.
+            Descargando unos 10 MB y subiendo unos 2 MB. Tarda unos segundos.
           </AppText>
         </div>
       ) : data ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <InfoChip variant="highlight">
-              {data.avg_latency_ms} ms avg
+              {data.avg_latency_ms} ms de media
             </InfoChip>
             <InfoChip>↓ {data.bandwidth.downlink_mbps ?? '—'} Mbps</InfoChip>
             <InfoChip>↑ {data.bandwidth.uplink_mbps ?? '—'} Mbps</InfoChip>
@@ -81,12 +80,12 @@ export function BandwidthCard({ data, running, error, onRun }: BandwidthCardProp
       ) : (
         <div className="flex flex-col gap-3">
           <AppText variant="body" className="text-secondary">
-            Measures real download and upload throughput from this browser, then
-            compares it with latency.
+            Mide la velocidad real de descarga y subida desde este navegador y la
+            compara con la latencia.
           </AppText>
           <AppText variant="caption" className="block text-muted">
-            Downloads about 10 MB and uploads about 2 MB using Cloudflare&apos;s
-            public speed endpoints. Nothing is sent to the UpPing backend.
+            Descarga unos 10 MB y sube unos 2 MB usando los endpoints públicos de
+            Cloudflare. No se envía nada al backend de UpPing.
           </AppText>
         </div>
       )}

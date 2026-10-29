@@ -4,19 +4,19 @@ import { Icon } from '@/components/Icon';
 
 const TOOLS = [
   {
-    name: 'ARP scan',
+    name: 'Escaneo ARP',
     reason:
-      'Browsers cannot read the local ARP table or enumerate devices on your LAN.',
+      'El navegador no puede leer la tabla ARP local ni enumerar dispositivos de tu LAN.',
   },
   {
     name: 'Traceroute',
     reason:
-      'Needs ICMP/UDP packets with custom TTLs; a web page can only make HTTP requests.',
+      'Necesita paquetes ICMP/UDP con TTL personalizado; una página web solo puede hacer peticiones HTTP.',
   },
   {
-    name: 'Port scan',
+    name: 'Escaneo de puertos',
     reason:
-      'Requires raw TCP/UDP sockets, which the browser sandbox does not expose.',
+      'Requiere sockets TCP/UDP sin procesar, que el sandbox del navegador no expone.',
   },
 ] as const;
 
@@ -27,8 +27,8 @@ const TOOLS = [
 export function UnavailableToolsCard() {
   return (
     <Card
-      title="Not available in the browser"
-      subtitle="These checks need raw sockets or local network access"
+      title="No disponible en el navegador"
+      subtitle="Estas comprobaciones necesitan sockets sin procesar o acceso a la red local"
     >
       <ul className="flex flex-col gap-3">
         {TOOLS.map((tool) => (
@@ -52,8 +52,8 @@ export function UnavailableToolsCard() {
       </ul>
 
       <AppText variant="caption" className="mt-4 block text-muted">
-        Run them from the native app or a local agent. UpPing Web only shows
-        measurements it can actually make.
+        Ejecútalos desde la app nativa o un agente local. UpPing Web solo muestra
+        mediciones que puede hacer de verdad.
       </AppText>
     </Card>
   );

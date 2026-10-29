@@ -2,13 +2,6 @@ import { apiDelete, apiGet, apiPost } from '@/lib/api/client';
 import { API_URL } from '@/lib/config';
 import { getAccessToken } from '@/store/authStore.selectors';
 import { useAuthStore } from '@/store/authStore';
-import {
-  demoDeleteTest,
-  demoExportCsv,
-  demoSaveTest,
-  demoTestsPage,
-  isDemoSession,
-} from '@/lib/demo';
 import { resolveToIp } from '@/lib/utils/resolveTarget';
 import type { CursorPage } from '@/types/api';
 import type { TestResult } from '@/types/test';
@@ -87,10 +80,6 @@ export async function getTests(
   cursor?: string | null,
   limit = 20
 ): Promise<CursorPage<TestResult>> {
-  if (isDemoSession()) {
-    return demoTestsPage(cursor);
-  }
-
   const offset = cursor ? Math.max(0, Number.parseInt(cursor, 10) || 0) : 0;
   const page = await apiGet<PingTestList>(
     `/tests?limit=${limit}&offset=${offset}`
@@ -107,10 +96,6 @@ export async function getTests(
 }
 
 export async function saveTest(test: TestResult): Promise<TestResult> {
-  if (isDemoSession()) {
-    return demoSaveTest(test);
-  }
-
   const payload = await toBackendCreate(test);
   const saved = await apiPost<PingTestOut>('/tests', payload);
 
@@ -119,10 +104,6 @@ export async function saveTest(test: TestResult): Promise<TestResult> {
 }
 
 export async function deleteTest(id: string): Promise<unknown> {
-  if (isDemoSession()) {
-    demoDeleteTest(id);
-    return { ok: true };
-  }
   return apiDelete<unknown>(`/tests/${encodeURIComponent(id)}`);
 }
 
@@ -131,24 +112,20 @@ async function getAccessTokenOrThrow(): Promise<string> {
   if (!token) {
     // Force session teardown so the app redirects to login.
     useAuthStore.getState().logout();
-    throw new Error('Not signed in');
+    throw new Error('No has iniciado sesión');
   }
   return token;
 }
 
 /** Fetches the CSV export body. Callers decide how to deliver it. */
 export async function exportTests(): Promise<string> {
-  if (isDemoSession()) {
-    return demoExportCsv();
-  }
-
   const token = await getAccessTokenOrThrow();
   const res = await fetch(`${API_URL}/tests/export`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
-    throw new Error(`Export failed (${res.status})`);
+    throw new Error(`La exportación falló (${res.status})`);
   }
   return res.text();
 }
