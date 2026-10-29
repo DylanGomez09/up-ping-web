@@ -3,6 +3,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
 import { InfoChip } from '@/components/InfoChip';
+import { Skeleton } from '@/components/Skeleton';
 import type {
   LatencyBandwidthCorrelation,
   LossSlice,
@@ -13,6 +14,8 @@ export interface PdfExportCardProps {
   exporting: boolean;
   loss: LossSlice[];
   bandwidth: LatencyBandwidthCorrelation | null;
+  /** Keeps the loss chip in place while the saved tests are still loading. */
+  lossLoading?: boolean;
 }
 
 /**
@@ -24,6 +27,7 @@ export function PdfExportCard({
   exporting,
   loss,
   bandwidth,
+  lossLoading = false,
 }: PdfExportCardProps) {
   const lost = loss.find((slice) => slice.label === 'Perdidos')?.value;
 
@@ -50,7 +54,13 @@ export function PdfExportCard({
             <InfoChip>Sin velocidad medida</InfoChip>
           )}
 
-          {lost !== undefined && <InfoChip>{lost.toFixed(1)}% de pérdida</InfoChip>}
+          {lossLoading ? (
+            <Skeleton className="h-[30px] w-28 rounded-chip" />
+          ) : (
+            lost !== undefined && (
+              <InfoChip>{lost.toFixed(1)}% de pérdida</InfoChip>
+            )
+          )}
         </div>
 
         <AppText variant="caption" className="block text-muted">

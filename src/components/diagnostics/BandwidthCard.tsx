@@ -3,7 +3,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
 import { InfoChip } from '@/components/InfoChip';
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/Skeleton';
 import { Status } from '@/components/diagnostics/tableParts';
 import type { LatencyBandwidthCorrelation } from '@/types/diagnostics';
 
@@ -50,13 +50,23 @@ export function BandwidthCard({ data, running, error, onRun }: BandwidthCardProp
       {error ? (
         <ErrorState message={error} onRetry={onRun} retryLabel="Reintentar" />
       ) : running ? (
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-4 w-full" />
-          <AppText variant="caption" className="block text-muted">
-            Descargando unos 10 MB y subiendo unos 2 MB. Tarda unos segundos.
-          </AppText>
-        </div>
+        <SkeletonGroup
+          label="Midiendo la velocidad de descarga y subida"
+          className="flex flex-col gap-4"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-[30px] w-32 rounded-chip" />
+            <Skeleton className="h-[30px] w-24 rounded-chip" />
+            <Skeleton className="h-[30px] w-24 rounded-chip" />
+          </div>
+
+          <Skeleton className="h-[22px] w-24" />
+
+          <div className="space-y-1.5">
+            <Skeleton className="h-[18px] w-full" />
+            <Skeleton className="h-[18px] w-3/4" />
+          </div>
+        </SkeletonGroup>
       ) : data ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">

@@ -79,6 +79,7 @@ export function DiagnosticsPage() {
         exporting={pdf.exporting}
         loss={lossSlices}
         bandwidth={bandwidth.data ?? null}
+        lossLoading={testsQuery.isLoading}
       />
 
       {!accessToken && (

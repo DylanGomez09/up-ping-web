@@ -53,6 +53,7 @@
   --c-danger: #B94A3E;
   --c-warning: #8A5B0F;
   --c-danger-soft: rgba(185, 74, 62, 0.1);
+  --c-shimmer: rgba(255, 255, 255, 0.85);
 }
 
 [data-theme='dark'] {
@@ -71,6 +72,7 @@
   --c-danger: #E2887C;
   --c-warning: #E0A64E;
   --c-danger-soft: rgba(226, 136, 124, 0.12);
+  --c-shimmer: rgba(255, 255, 255, 0.075);
 }
 
 /* The single brand gradient, shared by InfoChip (highlight), DiagnosticSummary
@@ -170,6 +172,61 @@ input[type='range']:focus-visible::-moz-range-thumb {
   outline-offset: 2px;
 }
 
+/* Loading placeholders: a soft highlight sweeps over a tinted block. Keeping
+   the effect in one class means every skeleton on screen stays in phase. */
+@keyframes skeleton-shimmer {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.skeleton {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--c-tint);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background-image: linear-gradient(
+    100deg,
+    transparent 25%,
+    var(--c-shimmer) 50%,
+    transparent 75%
+  );
+  animation: skeleton-shimmer 1.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+/* A ring expands from the newest delivered probe while a test is running. */
+@keyframes chart-live-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.65;
+  }
+  70% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.chart-live-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chart-live-pulse 1.6s ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -178,5 +235,22 @@ input[type='range']:focus-visible::-moz-range-thumb {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* A static, centred highlight instead of a sweep. */
+  .skeleton::after {
+    animation: none;
+    transform: none;
+    background-image: linear-gradient(
+      90deg,
+      transparent 30%,
+      var(--c-shimmer) 50%,
+      transparent 70%
+    );
+  }
+
+  .chart-live-pulse {
+    animation: none;
+    opacity: 0.35;
   }
 }

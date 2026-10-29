@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { Skeleton } from '@/components/Skeleton';
+import { AppShellSkeleton } from '@/components/shell/AppShellSkeleton';
 import { safeInternalPath } from '@/lib/navigation';
 import { useAuthStore } from '@/store/authStore';
 
@@ -12,15 +12,7 @@ export function HydratedRoute({ children }: { children: ReactNode }) {
   const hydrated = useAuthStore((s) => s._hydrated);
 
   if (!hydrated) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-bg px-4">
-        <div className="w-full max-w-sm space-y-3">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-        </div>
-      </div>
-    );
+    return <AppShellSkeleton />;
   }
 
   return <>{children}</>;

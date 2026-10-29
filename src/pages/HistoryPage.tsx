@@ -9,7 +9,7 @@ import { ErrorState } from '@/components/ErrorState';
 import { Icon } from '@/components/Icon';
 import { InfoChip } from '@/components/InfoChip';
 import { PageHeader } from '@/components/shell/Sidebar';
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/Skeleton';
 import { TestCard } from '@/components/TestCard';
 import { deleteTest, exportTests, getTests } from '@/lib/api/tests';
 import { downloadBlob } from '@/lib/utils/download';
@@ -134,7 +134,7 @@ export function HistoryPage() {
         subtitle={
           total !== undefined
             ? `${total} guardadas · mostrando ${items.length}`
-            : undefined
+            : 'Cargando tus pruebas guardadas…'
         }
         flush
       >
@@ -144,11 +144,14 @@ export function HistoryPage() {
             onRetry={() => void testsQuery.refetch()}
           />
         ) : testsQuery.isLoading ? (
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-          </div>
+          <SkeletonGroup
+            label="Cargando tus pruebas guardadas"
+            className="flex flex-col gap-3"
+          >
+            <TestCardSkeleton />
+            <TestCardSkeleton />
+            <TestCardSkeleton />
+          </SkeletonGroup>
         ) : items.length === 0 ? (
           <EmptyState
             mark={<Icon name="clock" size={26} />}
@@ -187,6 +190,33 @@ export function HistoryPage() {
 
       <div className="flex justify-center">
         <InfoChip>Sincronizado con tu cuenta de UpPing</InfoChip>
+      </div>
+    </div>
+  );
+}
+
+/** Mirrors `TestCard` so the list never jumps when the first page lands. */
+function TestCardSkeleton() {
+  return (
+    <div className="rounded-card border border-border bg-surface p-4 shadow-raised sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-5 w-40 max-w-full" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Skeleton className="h-[30px] w-20 rounded-chip" />
+          <Skeleton className="h-9 w-10 rounded-mark" />
+        </div>
       </div>
     </div>
   );

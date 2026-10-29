@@ -11,7 +11,7 @@ import { Field } from '@/components/Field';
 import { Icon } from '@/components/Icon';
 import { InfoChip } from '@/components/InfoChip';
 import { PageHeader } from '@/components/shell/Sidebar';
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/Skeleton';
 import { StatCard } from '@/components/StatCard';
 import { LatencySparkline } from '@/components/charts/LatencySparkline';
 import { LossDonut, LossLegend } from '@/components/charts/LossDonut';
@@ -389,12 +389,13 @@ export function DashboardPage() {
             <PingChart
               samples={test.samples}
               averageMs={test.avgLatencyMs || undefined}
+              running={running}
             />
           ) : (
             <EmptyState
               mark={<Icon name="chart-bars" size={26} />}
               title="Aún no hay sondas"
-              description="Inicia una prueba para dibujar el tiempo de ida y vuelta de cada sonda. Las pérdidas aparecen como marcas bajo la línea."
+              description="Inicia una prueba para dibujar el tiempo de ida y vuelta de cada sonda. Las pérdidas aparecen como cruces rojos en la base del gráfico."
             />
           )}
         </div>
@@ -437,7 +438,9 @@ export function DashboardPage() {
               onRetry={() => void testsQuery.refetch()}
             />
           ) : testsQuery.isLoading ? (
-            <Skeleton className="h-14 w-full" />
+            <SkeletonGroup label="Cargando la tendencia de las últimas 24 horas">
+              <Skeleton className="aspect-[320/56] w-full" />
+            </SkeletonGroup>
           ) : latencyPoints.length < 2 ? (
             <EmptyState
               mark={<Icon name="activity" size={26} />}
@@ -481,13 +484,21 @@ function LossPanel({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-5">
-        <Skeleton className="size-[120px] rounded-full" />
-        <div className="flex-1 space-y-3">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-4 w-24" />
+      <SkeletonGroup
+        label="Cargando el desglose de pérdida"
+        className="flex items-center gap-5"
+      >
+        <Skeleton className="size-[120px] shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          {[0, 1].map((row) => (
+            <div key={row} className="flex items-center gap-2.5">
+              <Skeleton className="size-2.5 shrink-0 rounded-full" />
+              <Skeleton className="h-[18px] w-24 max-w-full" />
+              <Skeleton className="ml-auto h-[18px] w-12 shrink-0" />
+            </div>
+          ))}
         </div>
-      </div>
+      </SkeletonGroup>
     );
   }
 

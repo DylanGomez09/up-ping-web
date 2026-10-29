@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { AppText } from '@/components/AppText';
+import { Skeleton } from '@/components/Skeleton';
 
 export interface StatCardProps {
   label: string;
@@ -36,7 +37,7 @@ export function StatCard({
 
           <div className="mt-2 flex items-baseline gap-1.5">
             {loading ? (
-              <span className="h-7 w-20 animate-pulse rounded-mark bg-tint" />
+              <Skeleton className="h-6 w-20 rounded-control" />
             ) : (
               <>
                 <AppText variant="data" mono className="text-primary">
