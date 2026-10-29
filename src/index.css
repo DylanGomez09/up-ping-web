@@ -205,6 +205,24 @@ input[type='range']:focus-visible::-moz-range-thumb {
   will-change: transform;
 }
 
+/* The newest delivered probe pops in once; older dots never re-animate. */
+@keyframes chart-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.chart-dot-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chart-dot-in 320ms ease-out both;
+}
+
 /* A ring expands from the newest delivered probe while a test is running. */
 @keyframes chart-live-pulse {
   0% {
@@ -252,5 +270,11 @@ input[type='range']:focus-visible::-moz-range-thumb {
   .chart-live-pulse {
     animation: none;
     opacity: 0.35;
+  }
+
+  .chart-dot-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

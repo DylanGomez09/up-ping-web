@@ -27,6 +27,14 @@ const INITIAL: PingTestState = {
 /** The UI stops automatically after this many probes. */
 const MAX_PROBES = 100;
 
+export interface PingTestOptions {
+  /**
+   * Probes before the run stops by itself. Omit for the dashboard's long
+   * monitoring run; the diagnostics card asks for a shorter sample.
+   */
+  maxProbes?: number;
+}
+
 /** Monotonic clock where available; falls back for older browsers. */
 function now(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -238,6 +246,7 @@ export function usePingTest() {
 
   const intervalS = useSettingsStore((s) => s.intervalS);
   const timeoutS = useSettingsStore((s) => s.timeoutS);
+  const maxProbesRef = useRef(MAX_PROBES);
 
   const cancelSleep = () => {
     if (sleepRef.current) {
@@ -365,7 +374,7 @@ export function usePingTest() {
           };
         });
 
-        if (seq >= MAX_PROBES) {
+        if (seq >= maxProbesRef.current) {
           finishRun(runId);
           return;
         }
@@ -398,7 +407,7 @@ export function usePingTest() {
   }, []);
 
   const start = useCallback(
-    (target: string) => {
+    (target: string, options: PingTestOptions = {}) => {
       const cleanTarget = target.trim();
       if (!cleanTarget) {
         setState((prev) => ({
@@ -432,6 +441,7 @@ export function usePingTest() {
       abortProbe();
       cancelSleep();
       seqRef.current = 0;
+      maxProbesRef.current = Math.max(1, Math.round(options.maxProbes ?? MAX_PROBES));
 
       setState({
         status: 'running',

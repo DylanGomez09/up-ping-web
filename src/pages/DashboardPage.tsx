@@ -45,7 +45,7 @@ export function DashboardPage() {
   const location = useLocation();
 
   const initialTarget = (location.state as LocationState | null)?.target?.trim();
-  const [target, setTarget] = useState(initialTarget || DEFAULT_TARGET);
+  const [target, setTarget] = useState(initialTarget ?? '');
   const [saveError, setSaveError] = useState<string | null>(null);
   const test = usePingTest();
 
@@ -326,39 +326,48 @@ export function DashboardPage() {
           </Button>
         }
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <form
+          className="flex flex-col gap-3 sm:flex-row sm:items-start"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (running) {
+              return;
+            }
+            setSaveError(null);
+            // An empty field measures the default host instead of erroring.
+            test.start(target.trim() || DEFAULT_TARGET);
+          }}
+        >
           <Field
             label="Host o IP de destino"
-            containerClassName="flex-1"
+            containerClassName="min-w-0 flex-1"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             placeholder="dns.google o 1.1.1.1"
-            hint="Los hosts públicos usan https://; los de la LAN, http:// (solo desde localhost)."
+            hint="Si lo dejas vacío se mide dns.google. Los hosts públicos usan https://; los de la LAN, http:// (solo desde localhost)."
             autoComplete="off"
             spellCheck={false}
             disabled={running}
             error={test.error}
           />
 
-          <div className="flex flex-wrap gap-2 sm:pb-0">
+          {/* 22px = the field label (16px line) plus its 6px margin, so the
+              controls line up with the input instead of its hint. */}
+          <div className="flex flex-wrap gap-2 sm:pt-[22px]">
             {running ? (
-              <Button variant="danger" onClick={test.stop}>
+              <Button type="button" variant="danger" onClick={test.stop}>
                 <Icon name="stop" size={16} />
                 Detener
               </Button>
             ) : (
-              <Button
-                onClick={() => {
-                  setSaveError(null);
-                  test.start(target);
-                }}
-              >
+              <Button type="submit">
                 <Icon name="play" size={16} />
                 Iniciar prueba
               </Button>
             )}
 
             <Button
+              type="button"
               variant="secondary"
               onClick={() => void handleSave()}
               disabled={test.status !== 'finished' || saveMutation.isPending}
@@ -367,7 +376,7 @@ export function DashboardPage() {
               Guardar resultado
             </Button>
           </div>
-        </div>
+        </form>
 
         {!accessToken && (
           <AppText variant="caption" className="mt-2 block text-muted">

@@ -5,6 +5,7 @@ import { AppText } from '@/components/AppText';
 import { InfoChip } from '@/components/InfoChip';
 import { PageHeader } from '@/components/shell/Sidebar';
 import { BandwidthCard } from '@/components/diagnostics/BandwidthCard';
+import { LatencyCard } from '@/components/diagnostics/LatencyCard';
 import { PdfExportCard } from '@/components/diagnostics/PdfExportCard';
 import { UnavailableToolsCard } from '@/components/diagnostics/UnavailableToolsCard';
 import { measureBandwidth } from '@/lib/api/bandwidth';
@@ -64,6 +65,8 @@ export function DiagnosticsPage() {
           </AppText>
         </div>
       )}
+
+      <LatencyCard />
 
       <BandwidthCard
         data={bandwidth.data ?? null}
